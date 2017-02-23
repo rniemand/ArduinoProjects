@@ -9,14 +9,38 @@
        7-SCLK      ----------------  13
        8-LED       - 330 Ohm res --  9
 */
+
+/* ************************************************************
+* Pong 1.0 (Richard Niemand)
+* *************************************************************
+* holder...
+* *************************************************************
+* Pin Outs
+* 
+* (Nokia 5110 screen)
+*   1 - RST         6
+*   2 - CE (SCE)    7
+*   3 - D/C         5
+*   4 - DIN (MOSI)  11
+*   5 - SCLK        13
+*   6 - VCC         5v
+*   7 - BL          3v
+*   8 - GND         GND
+*   
+* (Joystick Module)
+*   1 - SW          4
+*   2 - Y           A1
+*   3 - X           A0
+*   4 - 5v          5v
+*   5 - GND         GND
+************************************************************ */
+
 // https://github.com/adafruit/Adafruit-GFX-Library
 // https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_PCD8544.h>
-
-// int8_t SCLK, int8_t DIN, int8_t DC, int8_t CS, int8_t RST
-Adafruit_PCD8544 display = Adafruit_PCD8544(13, 11, 5, 7, 6);
+#include "joystick.cpp"
 
 const int BTN_UP         = 3;
 const int BTN_DOWN       = 2;
@@ -24,11 +48,16 @@ const int BTN_ACTION     = 4;
 const int BALL_WIDTH     = 2;
 const int PADDLE_WIDTH   = 2;
 const int PADDLE_HEIGHT  = 10;
-const int PADDLEY_LOCK   = (display.width() - 2);
 const int BOUNDRY_HEIGHT = 2;
 const int GAME_SPEED     = 15; // higher = slower
 const int MAX_SCORE      = 5;
 const bool DEBUG_ENABLED = false;
+const int JOY_X          = A0;
+const int JOY_Y          = A1;
+const int JOY_BTN        = 4;
+
+Adafruit_PCD8544 display = Adafruit_PCD8544(13, 11, 5, 7, 6); // SCLK, DIN, DC, CS, RST
+Joystick* joy = new Joystick(JOY_X, JOY_Y, JOY_BTN);
 
 // Game screens
 bool onStartScreen        = true;
@@ -36,29 +65,30 @@ bool inGame               = false;
 bool onInstructionScreen  = false;
 bool isGameOver           = false;
 
-bool gamePaused     = false;
-int btnUpState      = 0; 
-int btnDownState    = 0;
-int btnActionState  = 0;
-int paddle1Y        = (display.height() / 2) - (10 / PADDLE_WIDTH);
-int paddle2Y        = (display.height() / 2) - (10 / PADDLE_WIDTH);
-int ballX           = display.width()/2;
-int ballY           = display.height()/2;
-int ballSpeedX      = -1;
-int ballSpeedY      = 1;
-int player1Score    = 0;
-int player2Score    = 0;
+const int PADDLEY_LOCK   = (display.width() - 2);
+bool gamePaused          = false;
+int paddle1Y             = (display.height() / 2) - (10 / PADDLE_WIDTH);
+int paddle2Y             = (display.height() / 2) - (10 / PADDLE_WIDTH);
+int ballX                = display.width()/2;
+int ballY                = display.height()/2;
+int ballSpeedX           = -1;
+int ballSpeedY           = 1;
+int player1Score         = 0;
+int player2Score         = 0;
 
 unsigned long lastDebounceTime    = 0;
 unsigned long debounceDelay       = 200;
 
 void setup()
 {
-  pinMode(BTN_UP, INPUT_PULLUP);
-  pinMode(BTN_DOWN, INPUT_PULLUP);
-  pinMode(BTN_ACTION, INPUT_PULLUP);
-  
+  pinMode(JOY_BTN, INPUT_PULLUP);
+  pinMode(JOY_X, INPUT);
+  pinMode(JOY_Y, INPUT);  
+
   Serial.begin(9600);
+
+  joy->setThresholds(100, 100, 100, 100);
+  
   display.begin();
   display.setContrast(50);
   display.clearDisplay();
@@ -101,7 +131,7 @@ void movePaddles() {
 
 void movePlayerPaddle() {
   // Player has pressed the UP button
-  if( btnUpState == 1 ) {
+  if( joy->xDirection == UP ) {
     // Check to see if we are colliding with the top boundary
     if( paddle1Y > BOUNDRY_HEIGHT ) {
       paddle1Y -= 1;
@@ -109,7 +139,7 @@ void movePlayerPaddle() {
   }
 
   // Player has pressed the DOWN button
-  if( btnDownState == 1 ) {
+  if( joy->xDirection == DOWN ) {
     // Check to see if we are colliding with the bottom boundary
     if( (paddle1Y + PADDLE_HEIGHT) < (display.height() - BOUNDRY_HEIGHT) ) {
       paddle1Y += 1;
@@ -176,12 +206,10 @@ void resetBall() {
 // ========================================== >
 //IO
 void readButtons() {
-  btnUpState = digitalRead(BTN_UP) == 0;
-  btnDownState = digitalRead(BTN_DOWN) == 0;
-  btnActionState = digitalRead(BTN_ACTION) == 0;
+  joy->update();
 
   // super simple button press limiting
-  if( btnActionState == 1 && (millis() - lastDebounceTime) > debounceDelay ) {
+  if( joy->btn == 1 && (millis() - lastDebounceTime) > debounceDelay ) {
     lastDebounceTime = millis();
 
     if( onInstructionScreen == true ) {

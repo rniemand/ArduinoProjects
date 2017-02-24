@@ -2,7 +2,10 @@
 * Simple Relay Test (1.0.0)
 * ************************************************************************
 * 
-* My first attempt at working with a RELAY module (https://goo.gl/Bjo84P)
+* My first attempt at working with a RELAY module.
+* 
+* Buy Relay   : https://goo.gl/Bjo84P
+* Source Code : https://goo.gl/PCQQNn
 * 
 * ***********************************************************************
 * Pin Outs

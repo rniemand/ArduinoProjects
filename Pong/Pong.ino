@@ -10,41 +10,47 @@
        8-LED       - 330 Ohm res --  9
 */
 
-/* ************************************************************
+/* ***********************************************************************
 * Pong 1.0 (Richard Niemand)
-* *************************************************************
-* holder...
-* *************************************************************
+* ************************************************************************
+* My first attempt at working with the Nokia 5110 screen and
+* Arduino. There is a lo of room for improvements on the code
+* and I always welcome pull requests :)
+* 
+* Libs required for this project to work:
+* 
+*   https://github.com/adafruit/Adafruit-GFX-Library
+*   https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library
+*   
+* ***********************************************************************
 * Pin Outs
+* ***********************************************************************
 * 
 * (Nokia 5110 screen)
-*   1 - RST         6
-*   2 - CE (SCE)    7
-*   3 - D/C         5
-*   4 - DIN (MOSI)  11
-*   5 - SCLK        13
-*   6 - VCC         5v
-*   7 - BL          3v
-*   8 - GND         GND
+* 
+*   1 - RST        -------------------------- 6
+*   2 - CE (SCE)   -------------------------- 7
+*   3 - D/C        -------------------------- 5
+*   4 - DIN (MOSI) -------------------------- 11
+*   5 - SCLK       -------------------------- 13
+*   6 - VCC        -------------------------- 5v
+*   7 - BL         -------------------------- 3v
+*   8 - GND        -------------------------- GND
 *   
 * (Joystick Module)
-*   1 - SW          4
-*   2 - Y           A1
-*   3 - X           A0
-*   4 - 5v          5v
-*   5 - GND         GND
-************************************************************ */
-
-// https://github.com/adafruit/Adafruit-GFX-Library
-// https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library
-
+* 
+*   1 - SW         -------------------------- 4
+*   2 - Y          -------------------------- A1
+*   3 - X          -------------------------- A0
+*   4 - 5v         -------------------------- 5v
+*   5 - GND        -------------------------- GND
+*********************************************************************** */
 #include <Adafruit_GFX.h>
 #include <Adafruit_PCD8544.h>
+//#include "pong.cpp"
 #include "joystick.cpp"
+#include "screens.cpp"
 
-const int BTN_UP         = 3;
-const int BTN_DOWN       = 2;
-const int BTN_ACTION     = 4;
 const int BALL_WIDTH     = 2;
 const int PADDLE_WIDTH   = 2;
 const int PADDLE_HEIGHT  = 10;
@@ -58,6 +64,7 @@ const int JOY_BTN        = 4;
 
 Adafruit_PCD8544 display = Adafruit_PCD8544(13, 11, 5, 7, 6); // SCLK, DIN, DC, CS, RST
 Joystick* joy = new Joystick(JOY_X, JOY_Y, JOY_BTN);
+//Screens* screens = new Screens(display);
 
 // Game screens
 bool onStartScreen        = true;
@@ -87,7 +94,10 @@ void setup()
 
   Serial.begin(9600);
 
+  // PongGame* pong = new PongGame(GAME_SPEED, *joy);
+
   joy->setThresholds(100, 100, 100, 100);
+  //screens->setCurrentScreen(START);
   
   display.begin();
   display.setContrast(50);
@@ -260,6 +270,8 @@ void showScores() {
 }
 
 void showStartScreen() {
+  //screens->showStart();
+  
   if( !onStartScreen ) {
     return;
   }

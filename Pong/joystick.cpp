@@ -1,4 +1,7 @@
+#pragma once
 #include "Arduino.h"
+
+// FYI: http://stackoverflow.com/questions/8964164/single-class-has-a-class-redefinition-error
 
 enum Direction { UP, DOWN, LEFT, RIGHT, NONE };
 
@@ -17,6 +20,8 @@ class Joystick {
       leftThreshold = 512 + 100;
       rightThreshold = 512 - 100;
     };
+
+    Joystick();
     
     int x, y, btn;
 
@@ -51,6 +56,3 @@ class Joystick {
       setThresholdY(left, right);
     }
 };
-
-
-

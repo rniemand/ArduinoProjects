@@ -1,4 +1,5 @@
-﻿using System.Web.Http;
+﻿using System.Diagnostics;
+using System.Web.Http;
 
 namespace DataCollector.Controllers.API
 {
@@ -20,8 +21,11 @@ namespace DataCollector.Controllers.API
     }
   }
 
+  [DebuggerDisplay("{Temperature} *C ({Humidity} %)")]
   public class Bob
   {
-    public string Hello { get; set; }
+    public double Temperature { get; set; }
+    public double Humidity { get; set; }
+    public double HeatIndex { get; set; }
   }
 }

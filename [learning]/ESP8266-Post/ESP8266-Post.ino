@@ -11,6 +11,7 @@ ESP8266WiFiMulti WiFiMulti;
 #define DHTTYPE        DHT11
 const char* ssid       = "PickMe";
 const char* password   = "fallout312345";
+const String deviceId  = "0E97314A-8921-499F-BDEB-585276EB3020";
 
 float humidity         = 0;
 float temperature      = 0;
@@ -34,7 +35,7 @@ void loop() {
   readDhtValues();
   submitData();
   
-  delay(dhtReadSuccess ? 4000 : 100);
+  delay(dhtReadSuccess ? 5000 : 100);
 }
 
 // =============================== >
@@ -52,8 +53,9 @@ String generatePostData() {
   String a01 = "Temperature=";
   String a02 = "&Humidity=";
   String a03 = "&HeatIndex=";
+  String a04 = "&DeviceId=";
   
-  return a01 + temperature + a02 + humidity + a03 + heatIndex;
+  return a01 + temperature + a02 + humidity + a03 + heatIndex + a04 + deviceId;
 }
 
 void submitData() {

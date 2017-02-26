@@ -1,0 +1,82 @@
+using System.Configuration;
+using System.IO;
+using System.Text;
+using DataCollector.Models;
+
+namespace DataCollector
+{
+  public static class TemperatureLogger
+  {
+    public static string LogFile { get; private set; }
+
+    private static FileStream _fs;
+    private static StreamWriter _sw;
+    private static readonly string _sep;
+
+    // Constructor
+    static TemperatureLogger()
+    {
+      LogFile = ConfigurationManager.AppSettings["Rn.DataFile"];
+      _sep = ConfigurationManager.AppSettings["Rn.LineSep"];
+
+      CreateLogFile();
+    }
+
+    // Public methods
+    public static void LogValue(TemperatueInfo data)
+    {
+      var sb = new StringBuilder();
+
+      sb
+        .Append(data.TimeLoggedUtc).Append(_sep)
+        .Append(data.Temperature).Append(_sep)
+        .Append(data.Humidity).Append(_sep)
+        .Append(data.HeatIndex).Append(_sep)
+        .Append(data.DeviceId).Append(_sep)
+        .Append(data.DeviceIp);
+
+      _sw.WriteLine(sb.ToString());
+
+      _sw.Flush();
+      _fs.Flush();
+    }
+
+    // Internal methods
+    private static void CreateLogFile()
+    {
+      RollOldLogFile();
+
+      _fs = new FileStream(LogFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+      _sw = new StreamWriter(_fs);
+
+      // Write file header
+      var sb = new StringBuilder();
+
+      sb
+        .Append("TimeLoggedUtc").Append(_sep)
+        .Append("Temperature").Append(_sep)
+        .Append("Humidity").Append(_sep)
+        .Append("HeatIndex").Append(_sep)
+        .Append("DeviceId").Append(_sep)
+        .Append("DeviceIp");
+
+      _sw.WriteLine(sb.ToString());
+    }
+
+    private static void RollOldLogFile()
+    {
+      if (!File.Exists(LogFile))
+      {
+        return;
+      }
+
+      var oldLogFile = $"{LogFile}.old";
+      if (File.Exists(oldLogFile))
+      {
+        File.Delete(oldLogFile);
+      }
+
+      File.Move(LogFile, oldLogFile);
+    }
+  }
+}

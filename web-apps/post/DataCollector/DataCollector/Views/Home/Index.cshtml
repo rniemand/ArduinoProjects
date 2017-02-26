@@ -1,24 +1,40 @@
-﻿<div class="jumbotron">
-    <h1>ASP.NET</h1>
-    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS, and JavaScript.</p>
-    <p><a href="http://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
-</div>
-<div class="row">
-    <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>ASP.NET Web API is a framework that makes it easy to build HTTP services that reach
-        a broad range of clients, including browsers and mobile devices. ASP.NET Web API
-        is an ideal platform for building RESTful applications on the .NET Framework.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301870">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301871">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Web Hosting</h2>
-        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301872">Learn more &raquo;</a></p>
-    </div>
-</div>
+﻿<style>
+    .demo-container {
+        box-sizing: border-box;
+        width: 850px;
+        height: 450px;
+        padding: 20px 15px 15px 15px;
+        margin: 15px auto 30px auto;
+        border: 1px solid #ddd;
+        background: #fff;
+        background: linear-gradient(#f6f6f6 0, #fff 50px);
+        background: -o-linear-gradient(#f6f6f6 0, #fff 50px);
+        background: -ms-linear-gradient(#f6f6f6 0, #fff 50px);
+        background: -moz-linear-gradient(#f6f6f6 0, #fff 50px);
+        background: -webkit-linear-gradient(#f6f6f6 0, #fff 50px);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        -o-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        -ms-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        -moz-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        -webkit-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .demo-placeholder {
+        width: 100%;
+        height: 100%;
+        font-size: 14px;
+        line-height: 1.2em;
+    }
+</style>
+
+<br />
+<br />
+
+<canvas id="myChart" width="450" height="200"></canvas>
+
+@section scripts
+{
+    <script src="~/Scripts/moment.js"></script>
+    <script src="~/Scripts/Chart.js"></script>
+    <script src="~/Scripts/testing/temperature.js"></script>
+}

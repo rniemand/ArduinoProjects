@@ -17,6 +17,7 @@ float humidity         = 0;
 float temperature      = 0;
 float heatIndex        = 0;
 bool dhtReadSuccess    = false;
+String endPoint        = "http://192.168.0.71/DataCollector/API/v1/Test/Post";
 
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -35,7 +36,7 @@ void loop() {
   readDhtValues();
   submitData();
   
-  delay(dhtReadSuccess ? 5000 : 100);
+  delay(dhtReadSuccess ? 250 : 100);
 }
 
 // =============================== >
@@ -67,7 +68,7 @@ void submitData() {
   // wait for WiFi connection
   if((WiFiMulti.run() == WL_CONNECTED)) {
     HTTPClient http;
-    http.begin("http://192.168.0.71/DataCollector/API/v1/Test/Post"); //HTTP
+    http.begin(endPoint);
 
     String postData = generatePostData();
     Serial.println(postData);

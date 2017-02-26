@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Linq;
 using System.Text;
 using DataCollector.Models;
 
@@ -8,6 +10,7 @@ namespace DataCollector
   public static class TemperatureLogger
   {
     public static string LogFile { get; private set; }
+    public static List<TemperatueInfo> Samples { get; set; }
 
     private static FileStream _fs;
     private static StreamWriter _sw;
@@ -19,27 +22,26 @@ namespace DataCollector
       LogFile = ConfigurationManager.AppSettings["Rn.DataFile"];
       _sep = ConfigurationManager.AppSettings["Rn.LineSep"];
 
+      Samples = new List<TemperatueInfo>();
+
       CreateLogFile();
     }
 
     // Public methods
     public static void LogValue(TemperatueInfo data)
     {
-      var sb = new StringBuilder();
+      LogDataToFile(data);
 
-      sb
-        .Append(data.TimeLoggedUtc).Append(_sep)
-        .Append(data.Temperature).Append(_sep)
-        .Append(data.Humidity).Append(_sep)
-        .Append(data.HeatIndex).Append(_sep)
-        .Append(data.DeviceId).Append(_sep)
-        .Append(data.DeviceIp);
+      // Trim data points when we hit our max
+      if (Samples.Count >= 100)
+      {
+        Samples.Remove(Samples.First());
+      }
 
-      _sw.WriteLine(sb.ToString());
-
-      _sw.Flush();
-      _fs.Flush();
+      // Slot the latest data point into the collection
+      Samples.Add(data);
     }
+    
 
     // Internal methods
     private static void CreateLogFile()
@@ -77,6 +79,24 @@ namespace DataCollector
       }
 
       File.Move(LogFile, oldLogFile);
+    }
+
+    private static void LogDataToFile(TemperatueInfo data)
+    {
+      var sb = new StringBuilder();
+
+      sb
+        .Append(data.TimeLoggedUtc).Append(_sep)
+        .Append(data.Temperature).Append(_sep)
+        .Append(data.Humidity).Append(_sep)
+        .Append(data.HeatIndex).Append(_sep)
+        .Append(data.DeviceId).Append(_sep)
+        .Append(data.DeviceIp);
+
+      _sw.WriteLine(sb.ToString());
+
+      _sw.Flush();
+      _fs.Flush();
     }
   }
 }

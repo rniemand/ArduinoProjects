@@ -9,6 +9,7 @@ ESP8266WiFiMulti WiFiMulti;
 
 #define DHTPIN         D2
 #define DHTTYPE        DHT11
+#define LDR_PIN        A0
 const char* ssid       = "PickMe";
 const char* password   = "fallout312345";
 const String deviceId  = "0E97314A-8921-499F-BDEB-585276EB3020";
@@ -16,8 +17,11 @@ const String deviceId  = "0E97314A-8921-499F-BDEB-585276EB3020";
 float humidity         = 0;
 float temperature      = 0;
 float heatIndex        = 0;
+int lightReading       = 0;
 bool dhtReadSuccess    = false;
-String endPoint        = "http://192.168.0.71/DataCollector/API/v1/Test/Post";
+String endPoint        = "http://192.168.0.5/DataCollector/API/v1/Test/Post";
+//String endPoint        = "http://arduino.rniemand.com/API/v1/Test/Post";
+int sleepInterval      = 5 * 60 * 1000; // 5 min
 
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -27,6 +31,9 @@ void setup() {
   // Boot DHT  
   dht.begin();
 
+  // Setup LDR
+  pinMode(LDR_PIN, INPUT);
+
   // Boot WiFi
   waitForWifiReady();
   WiFiMulti.addAP(ssid, password);
@@ -34,9 +41,10 @@ void setup() {
 
 void loop() {
   readDhtValues();
+  readLdrValue();
   submitData();
   
-  delay(dhtReadSuccess ? 250 : 100);
+  delay(dhtReadSuccess ? sleepInterval : 100);
 }
 
 // =============================== >
@@ -55,8 +63,10 @@ String generatePostData() {
   String a02 = "&Humidity=";
   String a03 = "&HeatIndex=";
   String a04 = "&DeviceId=";
+  String a05 = "&LDR=";
   
-  return a01 + temperature + a02 + humidity + a03 + heatIndex + a04 + deviceId;
+  return a01 + temperature + a02 + humidity + a03 + heatIndex + a04 + deviceId
+    + a05 + lightReading;
 }
 
 void submitData() {
@@ -71,11 +81,23 @@ void submitData() {
     http.begin(endPoint);
 
     String postData = generatePostData();
-    Serial.println(postData);
-    
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    http.POST(postData);
+    int httpCode = http.POST(postData);
     http.writeToStream(&Serial);
+
+    // httpCode will be negative on error
+    if(httpCode > 0) {
+      // HTTP header has been send and Server response header has been handled
+      USE_SERIAL.printf("[HTTP] GET... code: %d\n", httpCode);
+
+      // file found at server
+      if(httpCode == HTTP_CODE_OK) {
+        String payload = http.getString();
+          USE_SERIAL.println(payload);
+        }
+      } else {
+        USE_SERIAL.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
+      }
 
     http.end();
   }
@@ -99,7 +121,7 @@ void readDhtValues() {
 
   dhtReadSuccess = true;
   heatIndex = dht.computeHeatIndex(temperature, humidity, false);
-  printTemperatureData();
+  //printTemperatureData();
 }
 
 void printTemperatureData() {
@@ -113,6 +135,15 @@ void printTemperatureData() {
   Serial.print(heatIndex);
   Serial.print(" *C ");
   Serial.println();
+}
+
+// =============================== >
+// LDR Methods
+
+void readLdrValue() {
+  lightReading = analogRead(A0);
+  //Serial.print("LDR Value: ");
+  //Serial.println(lightReading);
 }
 
 

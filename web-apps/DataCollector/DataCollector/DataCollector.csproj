@@ -238,6 +238,8 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
+    <Content Include="Views\Home\Temperature.cshtml" />
+    <Content Include="Views\Home\Light.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />

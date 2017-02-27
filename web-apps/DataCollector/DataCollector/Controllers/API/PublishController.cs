@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
@@ -21,6 +22,7 @@ namespace DataCollector.Controllers.API
       _logger = ServiceLocator.LogManager.GetLogger("PublishController");
       _deviceRepo = ServiceLocator.DeviceRepo;
       _lightRepo = ServiceLocator.LightRepo;
+      _temperatureRepo = ServiceLocator.TemperatureRepo;
     }
 
     [HttpPost]
@@ -52,7 +54,6 @@ namespace DataCollector.Controllers.API
       try
       {
         _logger.Trace("Attempting to save POST data");
-
         AppendClientsIpAddress(payload);
 
         await _temperatureRepo.Add(payload);
@@ -62,6 +63,10 @@ namespace DataCollector.Controllers.API
       {
         // TODO: capture failure...
         _logger.Error("Error saving POST data", ex);
+
+        var sb = new StringBuilder();
+        var error = $"{WalkStack(ex, sb)}";
+        return Ok(error);
       }
 
       return Ok("OK");
@@ -71,6 +76,18 @@ namespace DataCollector.Controllers.API
     private static void AppendClientsIpAddress(TemperatueInfo payload)
     {
       payload.DeviceIp = HttpContext.Current.Request.UserHostAddress;
+    }
+
+    private static string WalkStack(Exception ex, StringBuilder sb)
+    {
+      sb.Append(ex.Message).Append(" | ");
+
+      if (ex.InnerException != null)
+      {
+        return WalkStack(ex, sb);
+      }
+
+      return sb.ToString();
     }
   }
 }

@@ -80,6 +80,8 @@ void submitData() {
     http.begin(endPoint);
 
     String postData = generatePostData();
+    Serial.println(postData);
+    
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
     int httpCode = http.POST(postData);
     http.writeToStream(&Serial);

@@ -96,7 +96,8 @@ namespace DataCollector.DAL
         basePath += "\\";
       }
 
-      _dbFileLocation = path.Replace("{BASE_PATH}", basePath);
+      _dbFileLocation = path
+        .Replace("{BASE_PATH}", basePath);
     }
 
     private void EnsureDbExists()

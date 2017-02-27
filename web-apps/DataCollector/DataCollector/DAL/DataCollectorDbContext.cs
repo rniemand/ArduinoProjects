@@ -106,9 +106,13 @@ namespace DataCollector.DAL
 
       // Create database tables
       RunDbFileQuery(assembly, "DbFiles.Tables.Devices.sql");
+      RunDbFileQuery(assembly, "DbFiles.Tables.Temperature.sql");
+      RunDbFileQuery(assembly, "DbFiles.Tables.Light.sql");
 
       // Seed table contents
       RunDbFileQuery(assembly, "DbFiles.Seed.Devices.sql");
+      RunDbFileQuery(assembly, "DbFiles.Seed.Temperature.sql");
+      RunDbFileQuery(assembly, "DbFiles.Seed.Light.sql");
     }
 
     private bool DbFileExists()

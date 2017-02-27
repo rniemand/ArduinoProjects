@@ -171,6 +171,10 @@
     <Content Include="Content\bootstrap.min.css" />
     <EmbeddedResource Include="DAL\DbFiles\Tables\Devices.sql" />
     <EmbeddedResource Include="DAL\DbFiles\Seed\Devices.sql" />
+    <EmbeddedResource Include="DAL\DbFiles\Tables\Temperature.sql" />
+    <EmbeddedResource Include="DAL\DbFiles\Seed\Temperature.sql" />
+    <EmbeddedResource Include="DAL\DbFiles\Tables\Light.sql" />
+    <EmbeddedResource Include="DAL\DbFiles\Seed\Light.sql" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />

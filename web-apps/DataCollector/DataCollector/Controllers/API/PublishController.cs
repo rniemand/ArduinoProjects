@@ -4,7 +4,6 @@ using System.Web;
 using System.Web.Http;
 using DataCollector.DAL.Repos;
 using DataCollector.Models;
-using Newtonsoft.Json;
 using Rn.Logging.Interfaces;
 
 namespace DataCollector.Controllers.API
@@ -13,7 +12,8 @@ namespace DataCollector.Controllers.API
   public class PublishController : ApiController
   {
     private readonly IRnLogger _logger;
-    private readonly DeviceRepo _deviceRepo;
+    private readonly IDeviceRepo _deviceRepo;
+    private readonly ITemperatureRepo _temperatureRepo;
 
     public PublishController()
     {
@@ -43,16 +43,17 @@ namespace DataCollector.Controllers.API
         return BadRequest("Device has been disabled");
       }
 
+      // Set the DeviceId - used for inserting data into the DB
+      payload.DeviceId = device.Id;
+      payload.TimeLoggedUtc = DateTime.UtcNow;
+
       try
       {
         _logger.Trace("Attempting to save POST data");
 
         AppendClientsIpAddress(payload);
 
-
-
-
-        //TemperatureLogger.LogValue(tempData);
+        await _temperatureRepo.Add(payload);
       }
       catch (Exception ex)
       {
@@ -60,7 +61,7 @@ namespace DataCollector.Controllers.API
         _logger.Error("Error saving POST data", ex);
       }
 
-      return Ok();
+      return Ok("OK");
     }
 
 

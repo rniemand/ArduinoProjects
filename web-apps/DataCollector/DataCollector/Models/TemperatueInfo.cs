@@ -6,6 +6,7 @@ namespace DataCollector.Models
   [DebuggerDisplay("{Temperature} *C ({Humidity} %)")]
   public class TemperatueInfo
   {
+    public int DeviceId { get; set; }
     public double Temperature { get; set; }
     public double Humidity { get; set; }
     public double HeatIndex { get; set; }

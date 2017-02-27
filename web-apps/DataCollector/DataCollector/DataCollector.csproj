@@ -155,6 +155,8 @@
     <Compile Include="DAL\DataCollectorDbContext.cs" />
     <Compile Include="DAL\Repos\DeviceRepo.cs" />
     <Compile Include="DAL\Repos\IDeviceRepo.cs" />
+    <Compile Include="DAL\Repos\ITemperatureRepo.cs" />
+    <Compile Include="DAL\Repos\TemperatureRepo.cs" />
     <Compile Include="Models\Database\Device.cs" />
     <Compile Include="ServiceLocator.cs" />
     <Compile Include="TemperatureLogger.cs" />
@@ -179,6 +181,7 @@
     <EmbeddedResource Include="DAL\DbFiles\Tables\Light.sql" />
     <EmbeddedResource Include="DAL\DbFiles\Seed\Light.sql" />
     <EmbeddedResource Include="DAL\DbFiles\Queries\DeviceRepo\GetByDeviceKey.sql" />
+    <EmbeddedResource Include="DAL\DbFiles\Queries\TemperatureRepo\Add.sql" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />

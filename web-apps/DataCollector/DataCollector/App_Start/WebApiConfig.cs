@@ -1,8 +1,4 @@
-﻿using System.Configuration;
-using System.Web.Http;
-using Rn.Logging;
-using Rn.Logging.Enums;
-using Rn.Logging.Outputs;
+﻿using System.Web.Http;
 
 namespace DataCollector
 {

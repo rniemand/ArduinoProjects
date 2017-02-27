@@ -35,9 +35,13 @@ namespace DataCollector
     // "Installers" for our services
     private static void SetupLogging()
     {
-      ServiceLocator.LogManager = new RnLogManager();
+      LogManager = new RnLogManager();
 
-      var logFilePath = ConfigurationManager.AppSettings["Rn.Logging.FilePath"];
+      // Don't create an instance of the logger if it is not needed
+      if (!WebConfig.GetBoolAppSetting("Rn.Logging.Enabled"))
+        return;
+
+      var logFilePath = WebConfig.GetAppSetting("Rn.Logging.FilePath");
 
       var config = new RollingFileOutputConfig(logFilePath, "default")
       {
@@ -50,7 +54,7 @@ namespace DataCollector
 
       var fileOutput = new RollingFileOutput(config);
 
-      ServiceLocator.LogManager.RegisterLoggerOutput(fileOutput);
+      LogManager.RegisterLoggerOutput(fileOutput);
     }
 
     private static void SetupDbContext()

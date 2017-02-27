@@ -19,8 +19,7 @@ float temperature      = 0;
 float heatIndex        = 0;
 int lightReading       = 0;
 bool dhtReadSuccess    = false;
-String endPoint        = "http://192.168.0.5/DataCollector/API/v1/Test/Post";
-//String endPoint        = "http://arduino.rniemand.com/API/v1/Test/Post";
+String endPoint        = "http://192.168.0.5/DataCollector/API/v1/Publish";
 int sleepInterval      = 5 * 60 * 1000; // 5 min
 
 DHT dht(DHTPIN, DHTTYPE);

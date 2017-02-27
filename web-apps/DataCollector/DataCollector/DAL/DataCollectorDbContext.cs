@@ -11,6 +11,7 @@ using Rn.Logging.Interfaces;
 
 namespace DataCollector.DAL
 {
+  // TODO: Add option to open / close the DB per request for this freaking NAS
   public class DataCollectorDbContext : IDataCollectorDbContext
   {
     private readonly IRnLogger _logger;
@@ -52,7 +53,9 @@ namespace DataCollector.DAL
     {
       EnsureDbConnected();
       var verion = _connection.Query<string>("select sqlite_version();");
-      return verion.First();
+      var response = verion.First();
+      _connection.Close();
+      return response;
     }
 
     public async Task<IEnumerable<T>> QueryAsync<T>(
@@ -62,8 +65,11 @@ namespace DataCollector.DAL
       int? commandTimeout = null,
       CommandType? commandType = null)
     {
+      // HACK for now
       EnsureDbConnected();
-      return await _dapper.QueryAsync<T>(_connection, sql, param, transaction, commandTimeout, commandType);
+      var response = await _dapper.QueryAsync<T>(_connection, sql, param, transaction, commandTimeout, commandType);
+      _connection.Close();
+      return response;
     }
 
     public async Task<int> ExecuteAsync(
@@ -74,7 +80,9 @@ namespace DataCollector.DAL
       CommandType? commandType = null)
     {
       EnsureDbConnected();
-      return await _dapper.ExecuteAsync(_connection, sql, param, transaction, commandTimeout, commandType);
+      var response = await _dapper.ExecuteAsync(_connection, sql, param, transaction, commandTimeout, commandType);
+      _connection.Close();
+      return response;
     }
 
     // Internal methods

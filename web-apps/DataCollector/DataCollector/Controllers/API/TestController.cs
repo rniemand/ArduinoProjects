@@ -14,7 +14,7 @@ namespace DataCollector.Controllers.API
 
     public TestController()
     {
-      _logger = Services.LogManager.GetLogger("TestController");
+      _logger = ServiceLocator.LogManager.GetLogger("TestController");
     }
 
     [Route("")]

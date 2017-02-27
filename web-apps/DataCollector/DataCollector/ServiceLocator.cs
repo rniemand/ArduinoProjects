@@ -18,6 +18,8 @@ namespace DataCollector
     public static IRnEmbedded RnEmbedded { get; set; }
     public static IDapperAdapter DapperAdapter { get; set; }
     public static IDeviceRepo DeviceRepo { get; set; }
+    public static ITemperatureRepo TemperatureRepo { get; set; }
+    public static ILightRepo LightRepo { get; set; }
 
     static ServiceLocator()
     {
@@ -27,6 +29,7 @@ namespace DataCollector
 
       SetupLogging();
       SetupDbContext();
+      SetupRepos();
     }
 
     // "Installers" for our services
@@ -53,6 +56,13 @@ namespace DataCollector
     private static void SetupDbContext()
     {
       DbContext = new DataCollectorDbContext(LogManager, WebConfig, DapperAdapter);
+    }
+
+    private static void SetupRepos()
+    {
+      DeviceRepo= new DeviceRepo(DbContext, RnEmbedded);
+      TemperatureRepo = new TemperatureRepo(DbContext, RnEmbedded);
+      LightRepo = new LightRepo(DbContext, RnEmbedded);
     }
   }
 }

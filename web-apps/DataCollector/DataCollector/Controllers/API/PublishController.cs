@@ -14,11 +14,13 @@ namespace DataCollector.Controllers.API
     private readonly IRnLogger _logger;
     private readonly IDeviceRepo _deviceRepo;
     private readonly ITemperatureRepo _temperatureRepo;
+    private readonly ILightRepo _lightRepo;
 
     public PublishController()
     {
       _logger = ServiceLocator.LogManager.GetLogger("PublishController");
-      _deviceRepo = new DeviceRepo(ServiceLocator.DbContext, ServiceLocator.RnEmbedded);
+      _deviceRepo = ServiceLocator.DeviceRepo;
+      _lightRepo = ServiceLocator.LightRepo;
     }
 
     [HttpPost]
@@ -54,6 +56,7 @@ namespace DataCollector.Controllers.API
         AppendClientsIpAddress(payload);
 
         await _temperatureRepo.Add(payload);
+        await _lightRepo.Add(payload);
       }
       catch (Exception ex)
       {

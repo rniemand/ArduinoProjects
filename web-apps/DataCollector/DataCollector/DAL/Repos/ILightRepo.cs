@@ -5,9 +5,9 @@ using DataCollector.Models.Database;
 
 namespace DataCollector.DAL.Repos
 {
-  public interface ITemperatureRepo
+  public interface ILightRepo
   {
-    Task Add(TemperatueInfo temperature);
-    Task<List<TemperatureModel>> GetLastXEntries(int deviceId);
+    Task Add(TemperatueInfo lightInfo);
+    Task<List<LightModel>> GetLastXEntries(int deviceId);
   }
 }

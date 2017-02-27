@@ -102,7 +102,7 @@ namespace DataCollector
         .Append(data.Humidity).Append(_sep)
         .Append(data.Ldr).Append(_sep)
         .Append(data.HeatIndex).Append(_sep)
-        .Append(data.DeviceId).Append(_sep)
+        .Append(data.DeviceKey).Append(_sep)
         .Append(data.DeviceIp);
 
       using (var fs = new FileStream(LogFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))

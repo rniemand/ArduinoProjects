@@ -12,7 +12,7 @@ ESP8266WiFiMulti WiFiMulti;
 #define LDR_PIN        A0
 const char* ssid       = "PickMe";
 const char* password   = "fallout312345";
-const String deviceId  = "0E97314A-8921-499F-BDEB-585276EB3020";
+const String deviceKey  = "0E97314A-8921-499F-BDEB-585276EB3020";
 
 float humidity         = 0;
 float temperature      = 0;
@@ -62,10 +62,10 @@ String generatePostData() {
   String a01 = "Temperature=";
   String a02 = "&Humidity=";
   String a03 = "&HeatIndex=";
-  String a04 = "&DeviceId=";
+  String a04 = "&deviceKey=";
   String a05 = "&LDR=";
   
-  return a01 + temperature + a02 + humidity + a03 + heatIndex + a04 + deviceId
+  return a01 + temperature + a02 + humidity + a03 + heatIndex + a04 + deviceKey
     + a05 + lightReading;
 }
 

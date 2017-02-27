@@ -11,7 +11,7 @@ namespace DataCollector.Models
     public double HeatIndex { get; set; }
     public double Ldr { get; set; }
     public DateTime TimeLoggedUtc { get; set; }
-    public string DeviceId { get; set; }
+    public string DeviceKey { get; set; }
     public string DeviceIp { get; set; }
 
     public TemperatueInfo()

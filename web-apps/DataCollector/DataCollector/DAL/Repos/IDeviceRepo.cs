@@ -5,6 +5,6 @@ namespace DataCollector.DAL.Repos
 {
   public interface IDeviceRepo
   {
-    Task<Device> GetByDeviceKey(string deviceKey);
+    Task<DeviceModel> GetByDeviceKey(string deviceKey);
   }
 }

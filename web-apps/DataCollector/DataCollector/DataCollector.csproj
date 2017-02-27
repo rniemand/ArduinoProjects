@@ -149,6 +149,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\API\PublishController.cs" />
+    <Compile Include="Controllers\API\TemperatureController.cs" />
     <Compile Include="DAL\DapperAdapter.cs" />
     <Compile Include="DAL\IDapperAdapter.cs" />
     <Compile Include="DAL\IDataCollectorDbContext.cs" />
@@ -157,7 +158,8 @@
     <Compile Include="DAL\Repos\IDeviceRepo.cs" />
     <Compile Include="DAL\Repos\ITemperatureRepo.cs" />
     <Compile Include="DAL\Repos\TemperatureRepo.cs" />
-    <Compile Include="Models\Database\Device.cs" />
+    <Compile Include="Models\Database\DeviceModel.cs" />
+    <Compile Include="Models\Database\TemperatureModel.cs" />
     <Compile Include="ServiceLocator.cs" />
     <Compile Include="TemperatureLogger.cs" />
     <Compile Include="Models\TemperatueInfo.cs" />
@@ -182,6 +184,7 @@
     <EmbeddedResource Include="DAL\DbFiles\Seed\Light.sql" />
     <EmbeddedResource Include="DAL\DbFiles\Queries\DeviceRepo\GetByDeviceKey.sql" />
     <EmbeddedResource Include="DAL\DbFiles\Queries\TemperatureRepo\Add.sql" />
+    <EmbeddedResource Include="DAL\DbFiles\Queries\TemperatureRepo\GetLastXEntries.sql" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />

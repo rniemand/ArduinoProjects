@@ -1,6 +1,6 @@
 ﻿namespace DataCollector.Models.Database
 {
-  public class Device
+  public class DeviceModel
   {
     public int Id { get; set; }
     public bool Deleted { get; set; }

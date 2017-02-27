@@ -1,6 +1,9 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
+using Dapper;
 using DataCollector.Models;
+using DataCollector.Models.Database;
 using Rn.Core.IO;
 
 namespace DataCollector.DAL.Repos
@@ -29,6 +32,17 @@ namespace DataCollector.DAL.Repos
         "Queries.TemperatureRepo.Add.sql");
 
       await _dbContext.ExecuteAsync(sql, tempInfo);
+    }
+
+    public async Task<List<TemperatureModel>> GetLastXEntries(int deviceId)
+    {
+      var sql = _embedded.GetResourceAsString(
+        Assembly.GetExecutingAssembly(),
+        "Queries.TemperatureRepo.GetLastXEntries.sql");
+
+      var data = await _dbContext.QueryAsync<TemperatureModel>(sql, new { DeviceId = deviceId });
+
+      return data.AsList();
     }
   }
 }

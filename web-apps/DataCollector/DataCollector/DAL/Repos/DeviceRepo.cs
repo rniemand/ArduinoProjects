@@ -17,13 +17,13 @@ namespace DataCollector.DAL.Repos
       _embedded = embedded;
     }
 
-    public async Task<Device> GetByDeviceKey(string deviceKey)
+    public async Task<DeviceModel> GetByDeviceKey(string deviceKey)
     {
       var sql = _embedded.GetResourceAsString(
         Assembly.GetExecutingAssembly(),
         "Queries.DeviceRepo.GetByDeviceKey.sql");
 
-      var data = await _dbContext.QueryAsync<Device>(sql, new { DeviceKey = deviceKey });
+      var data = await _dbContext.QueryAsync<DeviceModel>(sql, new { DeviceKey = deviceKey });
 
       return data.FirstOrDefault();
     }

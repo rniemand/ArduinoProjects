@@ -64,8 +64,6 @@ namespace DataCollector.Controllers.API
       return Ok("OK");
     }
 
-
-
     // helper methods
     private static void AppendClientsIpAddress(TemperatueInfo payload)
     {

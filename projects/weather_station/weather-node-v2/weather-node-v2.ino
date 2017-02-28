@@ -16,6 +16,9 @@
 
 /************ Global State (you don't need to change this!) ******************/
 
+const short LED_CONNECTED     = D1;
+const short LED_DISCONNECTED  = D0;
+
 // Create an ESP8266 WiFiClient class to connect to the MQTT server.
 WiFiClient client;
 // or... use WiFiFlientSecure for SSL
@@ -40,6 +43,10 @@ void MQTT_connect();
 void setup() {
   Serial.begin(9600);
   delay(10);
+
+  pinMode(LED_CONNECTED, OUTPUT);
+  pinMode(LED_DISCONNECTED, OUTPUT);
+  digitalWrite(LED_DISCONNECTED, LOW);
 
   Serial.println(F("Adafruit MQTT demo"));
 
@@ -102,9 +109,13 @@ void MQTT_connect() {
 
   // Stop if already connected.
   if (mqtt.connected()) {
+    digitalWrite(LED_DISCONNECTED, HIGH);
+    digitalWrite(LED_CONNECTED, LOW);
     return;
   }
 
+  digitalWrite(LED_DISCONNECTED, LOW);
+  digitalWrite(LED_CONNECTED, HIGH);
   Serial.print("Connecting to MQTT... ");
 
   uint8_t retries = 3;
@@ -119,6 +130,9 @@ void MQTT_connect() {
          while (1);
        }
   }
+
+  digitalWrite(LED_DISCONNECTED, HIGH);
+  digitalWrite(LED_CONNECTED, LOW);
   Serial.println("MQTT Connected!");
 }
 

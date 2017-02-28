@@ -15,14 +15,22 @@
 #define AIO_USERNAME    "niemandr"
 #define AIO_KEY         "2448a303eb354ad18a64623e6544916a"
 
+const char MQTT_SERVER[] PROGMEM    = AIO_SERVER;
+const char MQTT_CLIENTID[] PROGMEM  = __TIME__ AIO_USERNAME;
+const char MQTT_USERNAME[] PROGMEM  = AIO_USERNAME;
+const char MQTT_PASSWORD[] PROGMEM  = AIO_KEY;
+
 /************************* Pin Configuration *********************************/
 
 #define LED_DISCONNECTED  D0
 #define LED_CONNECTED     D1
 #define LED_PUBLISHING    D2
 #define DHTPIN            D3
+#define WEB_LED           D4
 #define LDR_PIN           A0
 #define DHTTYPE           DHT11
+#define MAX_CON_RETRY     12
+#define CON_RETRY_DELAY   5000
 
 /************ Global State (you don't need to change this!) ******************/
 
@@ -37,7 +45,11 @@ Adafruit_MQTT_Publish humidityFeed    = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAM
 Adafruit_MQTT_Publish heatIndexFeed   = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/heatIndex");
 Adafruit_MQTT_Publish ldrFeed         = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/ldr");
 
-// Adafruit_MQTT_Subscribe onoffbutton = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/onoff");
+Adafruit_MQTT_Subscribe ledSubscription = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/led");
+
+//const char AssistiveCallButtons_FEED[] PROGMEM = AIO_USERNAME "/feeds/led";
+//Adafruit_MQTT_Subscribe AssistiveCallButtons = Adafruit_MQTT_Subscribe(&mqtt, AssistiveCallButtons_FEED);
+ 
 
 /*************************** Sketch Code ************************************/
 
@@ -61,11 +73,13 @@ void setup() {
   pinMode(LED_DISCONNECTED, OUTPUT);
   pinMode(LED_PUBLISHING, OUTPUT);
   pinMode(LDR_PIN, INPUT);
+  pinMode(WEB_LED, OUTPUT);
 
   // Set initial LED state
   digitalWrite(LED_CONNECTED, HIGH);
   digitalWrite(LED_PUBLISHING, HIGH);
   digitalWrite(LED_DISCONNECTED, LOW);
+  digitalWrite(WEB_LED, HIGH);
 
   // Boot application
   Serial.println("Home Weather Station 1.0.0");
@@ -74,26 +88,37 @@ void setup() {
   waitForWiFiConnection();
   waitForDhtReady();
 
-
   // Setup MQTT subscription for onoff feed.
-  // mqtt.subscribe(&onoffbutton);
+  mqtt.subscribe(&ledSubscription);
 }
 
 void loop() {
-  MQTT_connect();
+  // Wait x seconds between submitting data to the server
+  for( short i = 0; i < 20; i++ ) {
+    MQTT_connect();
+    Adafruit_MQTT_Subscribe *subscription;
+    
+    while ((subscription = mqtt.readSubscription(500))) {
+      if (subscription == &ledSubscription) {
+        char* ledState = (char *)ledSubscription.lastread;
 
-  /*
-  Adafruit_MQTT_Subscribe *subscription;
+        Serial.print("GOT PUBLISH VALUE: ");
+        Serial.println(ledState);
+
+        if( String(ledState) == "ON" ) {
+          Serial.println("LED ON");
+          digitalWrite(WEB_LED, LOW);
+        } else {
+          Serial.println("LED OFF");
+          digitalWrite(WEB_LED, HIGH);
+        }
+      }
   
-  while ((subscription = mqtt.readSubscription(5000))) {
-    if (subscription == &onoffbutton) {
-      Serial.print(F("Got: "));
-      Serial.println((char *)onoffbutton.lastread);
+      delay(1);
     }
   }
-  */
-
   
+  // refresh and submit data to the server
   refreshData();
   publishData();
 
@@ -104,8 +129,6 @@ void loop() {
     mqtt.disconnect();
   }
   */
-
-  delay(10000);
 }
 
 // ========================================================== >>
@@ -155,9 +178,6 @@ void readDhtValues() {
   dhtReadSuccess = false;
   humidity = dht.readHumidity();
   temperature = dht.readTemperature();
-  
-  // Read temperature as Fahrenheit (isFahrenheit = true)
-  //float f = dht.readTemperature(true);
 
   // Check if any reads failed and exit early (to try again).
   if (isnan(humidity) || isnan(temperature)) {
@@ -166,6 +186,7 @@ void readDhtValues() {
 
   dhtReadSuccess = true;
   heatIndex = dht.computeHeatIndex(temperature, humidity, false);
+  Serial.println("Updated DHT values");
 }
 
 // ========================================================== >>
@@ -173,8 +194,7 @@ void readDhtValues() {
 
 void readLdrValue() {
   lightReading = analogRead(A0);
-  //Serial.print("LDR Value: ");
-  //Serial.println(lightReading);
+  Serial.println("Updated LDR value");
 }
 
 // ========================================================== >>
@@ -186,6 +206,8 @@ void refreshData() {
 }
 
 void publishData() {
+  MQTT_connect();
+  
   // Push data to server
   Serial.println("Publishing MQTT data...");
   digitalWrite(LED_PUBLISHING, LOW);
@@ -214,6 +236,7 @@ void toggleConnectionLeds(bool connected) {
   digitalWrite(LED_CONNECTED, connected ? LOW : HIGH);
 }
 
+// https://learn.adafruit.com/remote-control-with-the-huzzah-plus-adafruit-io/led-code
 void MQTT_connect() {
   int8_t ret;
 
@@ -226,12 +249,14 @@ void MQTT_connect() {
   toggleConnectionLeds(false);
   Serial.print("Connecting to MQTT... ");
 
-  uint8_t retries = 5;
+  uint8_t retries = MAX_CON_RETRY;
   while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
        Serial.println(mqtt.connectErrorString(ret));
-       Serial.println("Retrying MQTT connection in 3 seconds...");
+       Serial.print("Retrying MQTT connection in ");
+       Serial.print(CON_RETRY_DELAY);
+       Serial.println("ms...");
        mqtt.disconnect();
-       delay(3000);
+       delay(CON_RETRY_DELAY);
        retries--;
        if (retries == 0) {
          // basically die and wait for WDT to reset me

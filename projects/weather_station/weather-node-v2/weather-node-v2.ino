@@ -13,7 +13,7 @@
 #define AIO_SERVER      "io.adafruit.com"
 #define AIO_SERVERPORT  1883                   // use 8883  1883
 #define AIO_USERNAME    "niemandr"
-#define AIO_KEY         "2448a303eb354ad18a64623e6544916a"
+#define AIO_KEY         "x"
 
 const char MQTT_SERVER[] PROGMEM    = AIO_SERVER;
 const char MQTT_CLIENTID[] PROGMEM  = __TIME__ AIO_USERNAME;
@@ -40,10 +40,10 @@ DHT dht(DHTPIN, DHTTYPE);
 
 /****************************** Feeds ***************************************/
 
-Adafruit_MQTT_Publish temperatureFeed = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/temperature");
-Adafruit_MQTT_Publish humidityFeed    = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/humidity");
-Adafruit_MQTT_Publish heatIndexFeed   = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/heatIndex");
-Adafruit_MQTT_Publish ldrFeed         = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/ldr");
+Adafruit_MQTT_Publish temperatureFeed = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/weather-station.n1-temperature");
+Adafruit_MQTT_Publish humidityFeed    = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/weather-station.n1-humidity");
+Adafruit_MQTT_Publish heatIndexFeed   = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/weather-station.n1-heatindex");
+Adafruit_MQTT_Publish ldrFeed         = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/weather-station.n1-ldr");
 
 Adafruit_MQTT_Subscribe ledSubscription = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/led");
 
@@ -93,6 +93,10 @@ void setup() {
 }
 
 void loop() {
+  // refresh and submit data to the server
+  refreshData();
+  publishData();
+  
   // Wait x seconds between submitting data to the server
   for( short i = 0; i < 20; i++ ) {
     MQTT_connect();
@@ -117,10 +121,6 @@ void loop() {
       delay(1);
     }
   }
-  
-  // refresh and submit data to the server
-  refreshData();
-  publishData();
 
   // ping the server to keep the mqtt connection alive
   // NOT required if you are publishing once every KEEPALIVE seconds

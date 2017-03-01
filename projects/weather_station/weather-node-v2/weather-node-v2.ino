@@ -13,7 +13,7 @@
 #define AIO_SERVER      "io.adafruit.com"
 #define AIO_SERVERPORT  1883                   // use 8883  1883
 #define AIO_USERNAME    "niemandr"
-#define AIO_KEY         "x"
+#define AIO_KEY         "3"
 
 const char MQTT_SERVER[] PROGMEM    = AIO_SERVER;
 const char MQTT_CLIENTID[] PROGMEM  = __TIME__ AIO_USERNAME;
@@ -31,6 +31,16 @@ const char MQTT_PASSWORD[] PROGMEM  = AIO_KEY;
 #define DHTTYPE           DHT11
 #define MAX_CON_RETRY     12
 #define CON_RETRY_DELAY   5000
+#define DEBUG             true
+
+short TICK_INTERVAL_MS    = 1000; // time between ticks below (use this as your multiplier)
+short PUB_INT_LDR         = 60;   // publish LDR readings every 10 loops
+short PUB_INT_TEMP        = 300;  // publish TEMP readings every 10 loops
+short MQTT_PING_INT       = 10;   // ping the MQTT server every 5 seconds to keep alive
+
+short tickCountLdr        = 0;
+short tickCountTemp       = 0;
+short tickCountPing       = 0;
 
 /************ Global State (you don't need to change this!) ******************/
 
@@ -59,7 +69,7 @@ float temperature         = 0;
 float heatIndex           = 0;
 int lightReading          = 0;
 
-void MQTT_connect();
+// void MQTT_connect();
 
 // ========================================================== >>
 // Program controls
@@ -76,9 +86,9 @@ void setup() {
   pinMode(WEB_LED, OUTPUT);
 
   // Set initial LED state
-  digitalWrite(LED_CONNECTED, HIGH);
-  digitalWrite(LED_PUBLISHING, HIGH);
-  digitalWrite(LED_DISCONNECTED, LOW);
+  greenLED(false);
+  blueLED(false);
+  redLED(true);
   digitalWrite(WEB_LED, HIGH);
 
   // Boot application
@@ -93,148 +103,110 @@ void setup() {
 }
 
 void loop() {
-  // refresh and submit data to the server
-  refreshData();
-  publishData();
+  MQTT_connect();
   
-  // Wait x seconds between submitting data to the server
-  for( short i = 0; i < 20; i++ ) {
-    MQTT_connect();
-    Adafruit_MQTT_Subscribe *subscription;
-    
-    while ((subscription = mqtt.readSubscription(500))) {
-      if (subscription == &ledSubscription) {
-        char* ledState = (char *)ledSubscription.lastread;
-
-        Serial.print("GOT PUBLISH VALUE: ");
-        Serial.println(ledState);
-
-        if( String(ledState) == "ON" ) {
-          Serial.println("LED ON");
-          digitalWrite(WEB_LED, LOW);
-        } else {
-          Serial.println("LED OFF");
-          digitalWrite(WEB_LED, HIGH);
-        }
-      }
+  runPing();
+  publishData_LDR();
+  publishData_Temperature();
   
-      delay(1);
-    }
-  }
-
-  // ping the server to keep the mqtt connection alive
-  // NOT required if you are publishing once every KEEPALIVE seconds
-  /*
-  if(! mqtt.ping()) {
-    mqtt.disconnect();
-  }
-  */
+  checkMQTTSubs();
 }
+
 
 // ========================================================== >>
-// WiFi methods
+// Publishing related methods
 
-void waitForWiFiConnection() {
-  // Connect to WiFi access point.
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(WLAN_SSID);
-
-  WiFi.begin(WLAN_SSID, WLAN_PASS);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println();
-
-  Serial.println("WiFi connected");
-  Serial.println("IP address: "); Serial.println(WiFi.localIP());
-}
-
-// ========================================================== >>
-// DHT methods
-
-void waitForDhtReady() {
-  Serial.println("Waiting for DHT");
-  
-  while(!dhtReadSuccess) {
-    delay(250);
-    Serial.print(".");
-    readDhtValues();
-  }
-
-  Serial.println();
-  Serial.print("DHT Ready: (temperature: ");
-  Serial.print(temperature);
-  Serial.print(" *C) (humidity: ");
-  Serial.print(humidity);
-  Serial.print(" %) (heatIndex: ");
-  Serial.print(heatIndex);
-  Serial.print(")");
-  Serial.println();
-}
-
-void readDhtValues() {
-  dhtReadSuccess = false;
-  humidity = dht.readHumidity();
-  temperature = dht.readTemperature();
-
-  // Check if any reads failed and exit early (to try again).
-  if (isnan(humidity) || isnan(temperature)) {
+void runPing() {
+  // We only want to send the ping command every "MQTT_PING_INT" loops
+  if( tickCountPing < MQTT_PING_INT ) {
+    tickCountPing++;
     return;
   }
 
-  dhtReadSuccess = true;
-  heatIndex = dht.computeHeatIndex(temperature, humidity, false);
-  Serial.println("Updated DHT values");
+  redLED(false);
+  greenLED(true);
+  blueLED(true);
+  Serial.print("Running ping ... ");
+
+  if(!mqtt.ping(3)) {
+    redLED(true);
+    greenLED(false);
+    blueLED(false);
+    Serial.println("FAILED - attempting reconnection");
+    MQTT_connect();
+  } else {
+    Serial.println("SUCCESS");
+    redLED(false);
+    greenLED(true);
+    blueLED(false);
+  }
+
+  // Reset the tick counter so we can do this all over again
+  tickCountPing = 0;
 }
 
-// ========================================================== >>
-// LDR methods
+void publishData_LDR() {
+  // We only want to publish this data every "PUB_INT_LDR" ticks
+  if( tickCountLdr < PUB_INT_LDR ) {
+    tickCountLdr++;
+    return;
+  }
 
-void readLdrValue() {
-  lightReading = analogRead(A0);
-  Serial.println("Updated LDR value");
-}
+  // Refresh, and submit the LDR data
+  updateVaueLDR();
 
-// ========================================================== >>
-// Working with collected data
-
-void refreshData() {
-  readLdrValue();
-  readDhtValues();
-}
-
-void publishData() {
-  MQTT_connect();
+  blueLED(true);
+  Serial.print("Publishing LDR value (");
+  Serial.print(lightReading);
+  Serial.print(") ... ");
+  bool ldrPublishSuccess = ldrFeed.publish(lightReading);
+  Serial.println(ldrPublishSuccess ? " success" : " failure (will retry)");
+  blueLED(false);
   
-  // Push data to server
-  Serial.println("Publishing MQTT data...");
-  digitalWrite(LED_PUBLISHING, LOW);
+  // Reset the LDR tick counter to start all over again
+  tickCountLdr = ldrPublishSuccess ? 0 : tickCountLdr;
+}
+
+void publishData_Temperature() {
+  // We only want to publish temperature data every "PUB_INT_TEMP" ticks
+  if( tickCountTemp < PUB_INT_TEMP ) {
+    tickCountTemp++;
+    return;
+  }
+
+  // Refresh the temperature readings
+  readDhtValues();
+
+  Serial.println("Publishing Temperatue data...");
+  blueLED(true);
   
   Serial.print("    temperature : (");
   Serial.print(temperature);
-  Serial.println(temperatureFeed.publish(temperature) ? ") success" : ") failure");
+  Serial.print(")");
+  bool pubTempSuccess = temperatureFeed.publish(temperature);
+  Serial.println(pubTempSuccess ? " success" : " failure");
 
   Serial.print("    humidity    : (");
   Serial.print(humidity);
-  Serial.println(humidityFeed.publish(humidity) ? ") success" : ") failure");
+  Serial.print(")");
+  bool pubHumiditySucess = humidityFeed.publish(humidity);
+  Serial.println(pubHumiditySucess ? " success" : " failure");
 
   Serial.print("    heatIndex   : (");
   Serial.print(heatIndex);
-  Serial.println(heatIndexFeed.publish(heatIndex) ? ") success" : ") failure");
+  Serial.print(")");
+  bool pubHeatSuccess = heatIndexFeed.publish(heatIndex);
+  Serial.println(pubHeatSuccess ? " success" : " failure");
+  blueLED(false);
 
-  Serial.print("    ldr         : (");
-  Serial.print(lightReading);
-  Serial.println(ldrFeed.publish(lightReading) ? ") success" : ") failure");
-  
-  digitalWrite(LED_PUBLISHING, HIGH);
+  // Decide if we need to re-publish the data, or mark this as a success
+  bool overallSuccess = (pubTempSuccess && pubHumiditySucess && pubHeatSuccess);
+  tickCountTemp = overallSuccess ? 0 : tickCountTemp;
 }
 
-void toggleConnectionLeds(bool connected) {
-  digitalWrite(LED_DISCONNECTED, connected ? HIGH : LOW);
-  digitalWrite(LED_CONNECTED, connected ? LOW : HIGH);
-}
+
+// ========================================================== >>
+// MQQT Methods
 
 // https://learn.adafruit.com/remote-control-with-the-huzzah-plus-adafruit-io/led-code
 void MQTT_connect() {
@@ -267,5 +239,123 @@ void MQTT_connect() {
   toggleConnectionLeds(true);
   Serial.println("MQTT Connected!");
 }
+
+void checkMQTTSubs() {
+  Adafruit_MQTT_Subscribe *subscription;
+  
+  while ((subscription = mqtt.readSubscription(TICK_INTERVAL_MS))) {
+    if (subscription == &ledSubscription) {
+      char* ledState = (char *)ledSubscription.lastread;
+
+      //Serial.print("GOT PUBLISH VALUE: ");
+      //Serial.println(ledState);
+
+      if( String(ledState) == "ON" ) {
+        //Serial.println("LED ON");
+        digitalWrite(WEB_LED, LOW);
+      } else {
+        //Serial.println("LED OFF");
+        digitalWrite(WEB_LED, HIGH);
+      }
+    }
+
+    delay(1);
+  }
+}
+
+// ========================================================== >>
+// Hardware methods
+
+void waitForWiFiConnection() {
+  // Connect to WiFi access point.
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(WLAN_SSID);
+
+  WiFi.begin(WLAN_SSID, WLAN_PASS);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+
+  Serial.println("WiFi connected");
+  Serial.println("IP address: "); Serial.println(WiFi.localIP());
+}
+
+void waitForDhtReady() {
+  Serial.print("Waiting for DHT ");
+  
+  while(!dhtReadSuccess) {
+    delay(250);
+    Serial.print(".");
+    readDhtValues();
+  }
+  
+  Serial.print(" READY (temperature: ");
+  Serial.print(temperature);
+  Serial.print(" *C) (humidity: ");
+  Serial.print(humidity);
+  Serial.print(" %) (heatIndex: ");
+  Serial.print(heatIndex);
+  Serial.print(")");
+  Serial.println();
+}
+
+void readDhtValues() {
+  dhtReadSuccess = false;
+  humidity = dht.readHumidity();
+  temperature = dht.readTemperature();
+
+  // Check if any reads failed and exit early (to try again).
+  if (isnan(humidity) || isnan(temperature)) {
+    return;
+  }
+
+  dhtReadSuccess = true;
+  heatIndex = dht.computeHeatIndex(temperature, humidity, false);
+  Serial.println("Updated DHT values");
+}
+
+void toggleConnectionLeds(bool connected) {
+  digitalWrite(LED_DISCONNECTED, connected ? HIGH : LOW);
+  digitalWrite(LED_CONNECTED, connected ? LOW : HIGH);
+}
+
+void updateVaueLDR() {
+  lightReading = analogRead(A0);
+  Serial.println("Updated LDR value");
+}
+
+void blueLED(bool ledOn) {
+  if( ledOn == true ) {
+    digitalWrite(LED_PUBLISHING, LOW);
+    return;
+  }
+
+  digitalWrite(LED_PUBLISHING, HIGH);
+}
+
+void redLED(bool ledOn) {
+  if( ledOn == true ) {
+    digitalWrite(LED_DISCONNECTED, LOW);
+    return;
+  }
+
+  digitalWrite(LED_DISCONNECTED, HIGH);
+}
+
+void greenLED(bool ledOn) {
+  if( ledOn == true ) {
+    digitalWrite(LED_CONNECTED, LOW);
+    return;
+  }
+
+  digitalWrite(LED_CONNECTED, HIGH);
+}
+
+
+
+
 
 

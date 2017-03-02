@@ -1,0 +1,174 @@
+<html>
+
+<head>
+  <!--Load the AJAX API-->
+  <script src="jquery-3.1.1.min.js"></script>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript">
+    var channelId = 235274;
+    var readKey = 'PY5WT8H69IGPBO80';
+    var recordLimit = 10;
+    var allData = [];
+    var lightData = [];
+    var tempData = [];
+    var humidityData = [];
+    var lastReadings = [];
+
+    var buildUrl = function () {
+      return 'https://api.thingspeak.com/channels/' + channelId +
+        '/feeds.json?results=' + recordLimit + '&api_key=' + readKey;
+    };
+
+    var colors = {
+      temp: '#e82939',
+      heatIndex: '#da3bef',
+      humidity: '#5151f1',
+      light: '#f0e851'
+    };
+
+    var baseOptions = {
+      'title': 'Weather Station',
+      'width': '100%',
+      'height': 450,
+      crosshair: { trigger: 'focus' },
+      pointSize: 2,
+      /*
+      series: {
+        0: { lineWidth: 1 },
+        1: { lineWidth: 2 },
+        2: { lineWidth: 1 }
+      },
+      */
+      colors: [colors.temp, colors.heatIndex, colors.humidity, colors.light],
+      aggregationTarget: 'series',
+      areaOpacity: 0.2,
+      //chartArea: { left: 20, top: 0, width: '100%', height: '75%' }
+      isStacked: false,
+      interpolateNulls: true
+    };
+
+    var opt_all = $.extend({}, baseOptions, {});
+    var opt_temp = $.extend({}, baseOptions, { 'title': 'Temperature', colors: [colors.temp] });
+    var opt_humid = $.extend({}, baseOptions, { 'title': 'Humidity', colors: [colors.humidity] });
+    var opt_light = $.extend({}, baseOptions, { 'title': 'Light', colors: [colors.light] });
+
+    // Load the Visualization API and the corechart package.
+    google.charts.load('current', { 'packages': ['corechart', 'gauge', 'table'] });
+
+    // Set a callback to run when the Google Visualization API is loaded.
+    google.charts.setOnLoadCallback(drawChart);
+
+    // Callback that creates and populates a data table,
+    // instantiates the pie chart, passes in the data and
+    // draws it.
+    function drawChart() {
+      // Set chart baseOptions
+
+      // Instantiate and draw our chart, passing in some baseOptions.
+      var chartAll = new google.visualization.AreaChart(document.getElementById('chart_all'));
+      var chartLight = new google.visualization.AreaChart(document.getElementById('chart_light'));
+      var chartTemp = new google.visualization.AreaChart(document.getElementById('chart_temp'));
+      var chartHumidity = new google.visualization.AreaChart(document.getElementById('chart_humidity'));
+      var table = new google.visualization.Table(document.getElementById('chart_guages'));
+
+      var updateGraphs = function () {
+        chartAll.draw(google.visualization.arrayToDataTable(allData), opt_all);
+        chartLight.draw(google.visualization.arrayToDataTable(lightData), opt_light);
+        chartTemp.draw(google.visualization.arrayToDataTable(tempData), opt_temp);
+        chartHumidity.draw(google.visualization.arrayToDataTable(humidityData), opt_humid);
+
+        drawTable();
+
+        setTimeout(updateData, 5 * 1000);
+      };
+
+      var updateData = function () {
+        console.log('fetching new data');
+
+        $.getJSON(buildUrl())
+          .done(function (rawData) {
+            // Reset data
+            allData = [['Time', 'temperature', 'heatIndex', 'humidity']];
+            lightData = [['Time', 'lightReading']];
+            tempData = [['Time', 'temperature']];
+            humidityData = [['Time', 'humidity']];
+            lastReadings = [];
+
+            // Loop through and map all new data
+            rawData.feeds.forEach(function (dataPoint) {
+              allData.push([
+                dataPoint.created_at,
+                parseInt(dataPoint.field1),
+                parseInt(dataPoint.field2),
+                parseInt(dataPoint.field3)
+              ]);
+
+              lightData.push([
+                dataPoint.created_at,
+                parseInt(dataPoint.field4)
+              ]);
+
+              humidityData.push([
+                dataPoint.created_at,
+                parseInt(dataPoint.field3)
+              ]);
+
+              tempData.push([
+                dataPoint.created_at,
+                parseInt(dataPoint.field1)
+              ]);
+            });
+
+            // Populate last readings table
+            lastReadings.push([
+              'Light Reading',
+              lightData[lightData.length - 1][1],
+              new Date(lightData[lightData.length - 1][0])
+            ]);
+
+            lastReadings.push([
+              'Temperature',
+              tempData[tempData.length - 1][1],
+              new Date(tempData[tempData.length - 1][0])
+            ]);
+
+            lastReadings.push([
+              'Humidity',
+              humidityData[humidityData.length - 1][1],
+              new Date(humidityData[humidityData.length - 1][0])
+            ]);
+
+
+            // Finally update the graphs to display the latest data
+            updateGraphs();
+          })
+          .fail(function () {
+            alert('oh noes!');
+          });
+      };
+
+      updateData();
+
+      function drawTable() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Name');
+        data.addColumn('number', 'Last Reading');
+        data.addColumn('datetime', 'Reading Time');
+        data.addRows(lastReadings);
+
+        table.draw(data, { showRowNumber: true, width: '100%' });
+      }
+
+    }
+  </script>
+</head>
+
+<body>
+  <div id="chart_guages"></div>
+  <div id="chart_all"></div>
+  <div id="chart_temp"></div>
+  <div id="chart_humidity"></div>
+  <div id="chart_light"></div>
+</body>
+
+</html>

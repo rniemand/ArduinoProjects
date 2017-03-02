@@ -3,22 +3,14 @@
 #include "Adafruit_MQTT.h"
 #include "Adafruit_MQTT_Client.h"
 
-/************************* WiFi Access Point *********************************/
+/************************* WiFi and MQTT Config *********************************/
 
 #define WLAN_SSID       "PickMe"
 #define WLAN_PASS       "fallout312345"
-
-/************************* Adafruit.io Setup *********************************/
-
-#define AIO_SERVER      "io.adafruit.com"
-#define AIO_SERVERPORT  1883                   // use 8883  1883
-#define AIO_USERNAME    "niemandr"
-#define AIO_KEY         "b424b306d7bf491cbb07a2a843a40ebd"
-
-const char MQTT_SERVER[] PROGMEM    = AIO_SERVER;
-const char MQTT_CLIENTID[] PROGMEM  = __TIME__ AIO_USERNAME;
-const char MQTT_USERNAME[] PROGMEM  = AIO_USERNAME;
-const char MQTT_PASSWORD[] PROGMEM  = AIO_KEY;
+#define AIO_SERVER      "mqtt.thingspeak.com"
+#define AIO_SERVERPORT  1883
+#define CHANNEL_ID      "a"
+#define PUBLISH_KEY     "a"
 
 /************************* Pin Configuration *********************************/
 
@@ -28,38 +20,26 @@ const char MQTT_PASSWORD[] PROGMEM  = AIO_KEY;
 #define DHTPIN            D3
 #define WEB_LED           D4
 #define LDR_PIN           A0
+
+/************************* Misc Configuration *********************************/
+
 #define DHTTYPE           DHT11
 #define MAX_CON_RETRY     12
 #define CON_RETRY_DELAY   5000
 #define DEBUG             true
 
-short TICK_INTERVAL_MS    = 1000; // time between ticks below (use this as your multiplier)
-short PUB_INT_LDR         = 45;   // publish LDR readings every 10 loops
-short PUB_INT_TEMP        = 90;  // publish TEMP readings every 10 loops
-short MQTT_PING_INT       = 15;   // ping the MQTT server every 5 seconds to keep alive
+short TICK_INTERVAL_MS    = 1000;   // time between ticks below (use this as your multiplier)
+short PUB_INT_TEMP        = 300;    // publish TEMP readings every x loops
+short MQTT_PING_INT       = 15;     // ping the MQTT server every x seconds to keep alive
 
-short tickCountLdr        = 0;
-short tickCountTemp       = 0;
+short tickCountTemp       = PUB_INT_TEMP;
 short tickCountPing       = 0;
 
 /************ Global State (you don't need to change this!) ******************/
 
 WiFiClient client;
-Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
+Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT);
 DHT dht(DHTPIN, DHTTYPE);
-
-/****************************** Feeds ***************************************/
-
-Adafruit_MQTT_Publish temperatureFeed = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/weather-station.n1-temperature");
-Adafruit_MQTT_Publish humidityFeed    = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/weather-station.n1-humidity");
-Adafruit_MQTT_Publish heatIndexFeed   = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/weather-station.n1-heatindex");
-Adafruit_MQTT_Publish ldrFeed         = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/weather-station.n1-ldr");
-
-Adafruit_MQTT_Subscribe ledSubscription = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/led");
-
-//const char AssistiveCallButtons_FEED[] PROGMEM = AIO_USERNAME "/feeds/led";
-//Adafruit_MQTT_Subscribe AssistiveCallButtons = Adafruit_MQTT_Subscribe(&mqtt, AssistiveCallButtons_FEED);
- 
 
 /*************************** Sketch Code ************************************/
 
@@ -99,26 +79,22 @@ void setup() {
   waitForDhtReady();
 
   // Setup MQTT subscription for onoff feed.
-  mqtt.subscribe(&ledSubscription);
+  //mqtt.subscribe(&ledSubscription);
 }
 
 void loop() {
-  MQTT_connect();
+  runPing(false);
+  publishData();
   
-  runPing();
-  publishData_LDR();
-  publishData_Temperature();
-  
-  checkMQTTSubs();
+  delay(TICK_INTERVAL_MS);
 }
-
 
 // ========================================================== >>
 // Publishing related methods
 
-void runPing() {
+void runPing(bool forcePing) {
   // We only want to send the ping command every "MQTT_PING_INT" loops
-  if( tickCountPing < MQTT_PING_INT ) {
+  if( tickCountPing < MQTT_PING_INT && forcePing == false ) {
     tickCountPing++;
     return;
   }
@@ -145,63 +121,42 @@ void runPing() {
   tickCountPing = 0;
 }
 
-void publishData_LDR() {
-  // We only want to publish this data every "PUB_INT_LDR" ticks
-  if( tickCountLdr < PUB_INT_LDR ) {
-    tickCountLdr++;
-    return;
-  }
-
-  // Refresh, and submit the LDR data
-  updateVaueLDR();
-
-  blueLED(true);
-  Serial.print("Publishing LDR value (");
-  Serial.print(lightReading);
-  Serial.print(") ... ");
-  bool ldrPublishSuccess = ldrFeed.publish(lightReading);
-  Serial.println(ldrPublishSuccess ? " success" : " failure (will retry)");
-  blueLED(false);
-  
-  // Reset the LDR tick counter to start all over again
-  tickCountLdr = ldrPublishSuccess ? 0 : tickCountLdr;
-}
-
-void publishData_Temperature() {
+void publishData() {
   // We only want to publish temperature data every "PUB_INT_TEMP" ticks
   if( tickCountTemp < PUB_INT_TEMP ) {
     tickCountTemp++;
     return;
   }
 
-  // Refresh the temperature readings
+  // Ensure that we are connected
+  runPing(true);
+  
+  // Refresh our readings
+  readLdrValue();
   readDhtValues();
 
   Serial.println("Publishing Temperatue data...");
-  blueLED(true);
+
+  String data = String(
+    "field1=" + String(temperature, DEC) + 
+    "&field2=" + String(heatIndex, DEC) + 
+    "&field3=" + String(humidity, DEC) +
+    "&field4=" + String(lightReading, DEC)
+  );
   
-  Serial.print("    temperature : (");
-  Serial.print(temperature);
-  Serial.print(")");
-  bool pubTempSuccess = temperatureFeed.publish(temperature);
-  Serial.println(pubTempSuccess ? " success" : " failure");
+  int length = data.length();
+  char msgBuffer[length];
+  data.toCharArray(msgBuffer,length+1);
+  Serial.print("   >> ");
+  Serial.println(msgBuffer);
 
-  Serial.print("    humidity    : (");
-  Serial.print(humidity);
-  Serial.print(")");
-  bool pubHumiditySucess = humidityFeed.publish(humidity);
-  Serial.println(pubHumiditySucess ? " success" : " failure");
-
-  Serial.print("    heatIndex   : (");
-  Serial.print(heatIndex);
-  Serial.print(")");
-  bool pubHeatSuccess = heatIndexFeed.publish(heatIndex);
-  Serial.println(pubHeatSuccess ? " success" : " failure");
+  blueLED(true);
+  bool success = mqtt.publish("channels/" CHANNEL_ID "/publish/" PUBLISH_KEY, msgBuffer);
   blueLED(false);
 
   // Decide if we need to re-publish the data, or mark this as a success
-  bool overallSuccess = (pubTempSuccess && pubHumiditySucess && pubHeatSuccess);
-  tickCountTemp = overallSuccess ? 0 : tickCountTemp;
+  Serial.println(success ? "SUCCESS" : "FAILED");
+  tickCountTemp = success ? 0 : tickCountTemp;
 }
 
 
@@ -240,28 +195,6 @@ void MQTT_connect() {
   Serial.println("MQTT Connected!");
 }
 
-void checkMQTTSubs() {
-  Adafruit_MQTT_Subscribe *subscription;
-  
-  while ((subscription = mqtt.readSubscription(TICK_INTERVAL_MS))) {
-    if (subscription == &ledSubscription) {
-      char* ledState = (char *)ledSubscription.lastread;
-
-      //Serial.print("GOT PUBLISH VALUE: ");
-      //Serial.println(ledState);
-
-      if( String(ledState) == "ON" ) {
-        //Serial.println("LED ON");
-        digitalWrite(WEB_LED, LOW);
-      } else {
-        //Serial.println("LED OFF");
-        digitalWrite(WEB_LED, HIGH);
-      }
-    }
-
-    delay(1);
-  }
-}
 
 // ========================================================== >>
 // Hardware methods
@@ -322,7 +255,7 @@ void toggleConnectionLeds(bool connected) {
   digitalWrite(LED_CONNECTED, connected ? LOW : HIGH);
 }
 
-void updateVaueLDR() {
+void readLdrValue() {
   lightReading = analogRead(A0);
   Serial.println("Updated LDR value");
 }

@@ -1,0 +1,12 @@
+  .controls {
+    border: 1px dotted #ECECEC;
+    padding: 1px;
+    margin: 1px;
+    font-size: 0.8em;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+  }
+
+  .controls input {
+    width: 40px;
+    text-align: center;
+  }

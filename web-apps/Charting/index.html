@@ -1,12 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <title>Charts</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <script src="jquery-3.1.1.min.js"></script>
+    <script src="moment.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="main.js"></script>
 </head>
+
 <body>
-    <li><a href="chart-pie.html">Pie</a></li>
-    <li><a href="chart-bar.html">Bar</a></li>
-    <li><a href="playing.html">Playing...</a></li>
+    <div class="controls">
+        Data Points: <input type="number" value="30" id="numRecords"> Refresh Every: <input type="number" value="60" id="refreshInt">        seconds
+        <button onClick="forceRefresh()">Update Settings</button>
+    </div>
+
+    <br>
+    <div id="chart_guages"></div>
+
+    <div id="chart_temp"></div>
+    <div id="chart_humidity"></div>
+    <div id="chart_light"></div>
+
+    <div id="chart_all"></div>
 </body>
+
 </html>

@@ -3,16 +3,24 @@
 <head>
   <!--Load the AJAX API-->
   <script src="jquery-3.1.1.min.js"></script>
+  <script src="moment.min.js"></script>
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <script type="text/javascript">
     var channelId = 235274;
     var readKey = 'PY5WT8H69IGPBO80';
-    var recordLimit = 10;
+    var recordLimit = 30;
+    var refreshInterval = 30 * 1000; // every 30 seconds
     var allData = [];
     var lightData = [];
     var tempData = [];
     var humidityData = [];
     var lastReadings = [];
+    var updateTimeout = null;
+    var chartAll = null;
+    var chartLight = null;
+    var chartTemp = null;
+    var chartHumidity = null;
+    var table = null;
 
     var buildUrl = function () {
       return 'https://api.thingspeak.com/channels/' + channelId +
@@ -47,6 +55,103 @@
       interpolateNulls: true
     };
 
+    var forceRefresh = function () {
+      // Change update interval
+      recordLimit = parseInt($('#numRecords').val());
+      var updateInt = parseInt($('#refreshInt').val());
+      if (updateInt < 5) updateInt = 5;
+      refreshInterval = updateInt * 1000;
+      $('#refreshInt').val(refreshInterval / 1000);
+
+      // Clear timeout
+      clearTimeout(updateTimeout);
+      updateTimeout = null;
+
+      // Run an update now!
+      updateData();
+    };
+
+    var updateGraphs = function () {
+      chartAll.draw(google.visualization.arrayToDataTable(allData), opt_all);
+      chartLight.draw(google.visualization.arrayToDataTable(lightData), opt_light);
+      chartTemp.draw(google.visualization.arrayToDataTable(tempData), opt_temp);
+      chartHumidity.draw(google.visualization.arrayToDataTable(humidityData), opt_humid);
+
+      drawTable();
+
+      updateTimeout = setTimeout(updateData, refreshInterval);
+    };
+
+    var updateData = function () {
+      console.log('fetching new data');
+
+      $.getJSON(buildUrl())
+        .done(function (rawData) {
+          // Reset data
+          allData = [['Time', 'temperature', 'heatIndex', 'humidity']];
+          lightData = [['Time', 'lightReading']];
+          tempData = [['Time', 'temperature']];
+          humidityData = [['Time', 'humidity']];
+          lastReadings = [];
+
+          var tempReadings = {
+            light: null,
+            humidity: null,
+            temperature: null,
+            heatIndex: null
+          };
+
+          // Loop through and map all new data
+          rawData.feeds.forEach(function (dataPoint) {
+            var _date = moment.utc(dataPoint.created_at)._d;
+            var _light = parseInt(dataPoint.field4);
+            var _humidity = parseInt(dataPoint.field3);
+            var _temp = parseInt(dataPoint.field1);
+            var _heatIndex = parseInt(dataPoint.field2);
+
+            allData.push([_date, _temp, _heatIndex, _humidity]);
+
+            lightData.push([_date, _light]);
+            humidityData.push([_date, _humidity]);
+            tempData.push([_date, _temp]);
+
+            if (!tempReadings.light && !isNaN(_light))
+              tempReadings.light = [_date, _light];
+
+            if (!tempReadings.humidity && !isNaN(_humidity))
+              tempReadings.humidity = [_date, _humidity];
+
+            if (!tempReadings.temperature && !isNaN(_temp))
+              tempReadings.temperature = [_date, _temp];
+
+            if (!tempReadings.heatIndex && !isNaN(_heatIndex))
+              tempReadings.heatIndex = [_date, _heatIndex];
+          });
+
+          // Populate last readings table
+          lastReadings.push(['Light Reading', tempReadings.light[1], tempReadings.light[0]]);
+          lastReadings.push(['Temperature', tempReadings.temperature[1], tempReadings.temperature[0]]);
+          lastReadings.push(['Humidity', tempReadings.humidity[1], tempReadings.humidity[0]]);
+          lastReadings.push(['Heat Index', tempReadings.heatIndex[1], tempReadings.heatIndex[0]]);
+
+          // Finally update the graphs to display the latest data
+          updateGraphs();
+        })
+        .fail(function () {
+          alert('oh noes!');
+        });
+    };
+
+    function drawTable() {
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Name');
+      data.addColumn('number', 'Last Reading');
+      data.addColumn('datetime', 'Reading Time');
+      data.addRows(lastReadings);
+
+      table.draw(data, { showRowNumber: true, width: '100%' });
+    }
+
     var opt_all = $.extend({}, baseOptions, {});
     var opt_temp = $.extend({}, baseOptions, { 'title': 'Temperature', colors: [colors.temp] });
     var opt_humid = $.extend({}, baseOptions, { 'title': 'Humidity', colors: [colors.humidity] });
@@ -58,117 +163,36 @@
     // Set a callback to run when the Google Visualization API is loaded.
     google.charts.setOnLoadCallback(drawChart);
 
-    // Callback that creates and populates a data table,
-    // instantiates the pie chart, passes in the data and
-    // draws it.
+    // Callback that creates and populates a data table, instantiates the pie chart, passes in the data and draws it.
     function drawChart() {
-      // Set chart baseOptions
-
       // Instantiate and draw our chart, passing in some baseOptions.
-      var chartAll = new google.visualization.AreaChart(document.getElementById('chart_all'));
-      var chartLight = new google.visualization.AreaChart(document.getElementById('chart_light'));
-      var chartTemp = new google.visualization.AreaChart(document.getElementById('chart_temp'));
-      var chartHumidity = new google.visualization.AreaChart(document.getElementById('chart_humidity'));
-      var table = new google.visualization.Table(document.getElementById('chart_guages'));
-
-      var updateGraphs = function () {
-        chartAll.draw(google.visualization.arrayToDataTable(allData), opt_all);
-        chartLight.draw(google.visualization.arrayToDataTable(lightData), opt_light);
-        chartTemp.draw(google.visualization.arrayToDataTable(tempData), opt_temp);
-        chartHumidity.draw(google.visualization.arrayToDataTable(humidityData), opt_humid);
-
-        drawTable();
-
-        setTimeout(updateData, 5 * 1000);
-      };
-
-      var updateData = function () {
-        console.log('fetching new data');
-
-        $.getJSON(buildUrl())
-          .done(function (rawData) {
-            // Reset data
-            allData = [['Time', 'temperature', 'heatIndex', 'humidity']];
-            lightData = [['Time', 'lightReading']];
-            tempData = [['Time', 'temperature']];
-            humidityData = [['Time', 'humidity']];
-            lastReadings = [];
-
-            // Loop through and map all new data
-            rawData.feeds.forEach(function (dataPoint) {
-              allData.push([
-                dataPoint.created_at,
-                parseInt(dataPoint.field1),
-                parseInt(dataPoint.field2),
-                parseInt(dataPoint.field3)
-              ]);
-
-              lightData.push([
-                dataPoint.created_at,
-                parseInt(dataPoint.field4)
-              ]);
-
-              humidityData.push([
-                dataPoint.created_at,
-                parseInt(dataPoint.field3)
-              ]);
-
-              tempData.push([
-                dataPoint.created_at,
-                parseInt(dataPoint.field1)
-              ]);
-            });
-
-            // Populate last readings table
-            lastReadings.push([
-              'Light Reading',
-              lightData[lightData.length - 1][1],
-              new Date(lightData[lightData.length - 1][0])
-            ]);
-
-            lastReadings.push([
-              'Temperature',
-              tempData[tempData.length - 1][1],
-              new Date(tempData[tempData.length - 1][0])
-            ]);
-
-            lastReadings.push([
-              'Humidity',
-              humidityData[humidityData.length - 1][1],
-              new Date(humidityData[humidityData.length - 1][0])
-            ]);
-
-
-            // Finally update the graphs to display the latest data
-            updateGraphs();
-          })
-          .fail(function () {
-            alert('oh noes!');
-          });
-      };
+      chartAll = new google.visualization.AreaChart(document.getElementById('chart_all'));
+      chartLight = new google.visualization.AreaChart(document.getElementById('chart_light'));
+      chartTemp = new google.visualization.AreaChart(document.getElementById('chart_temp'));
+      chartHumidity = new google.visualization.AreaChart(document.getElementById('chart_humidity'));
+      table = new google.visualization.Table(document.getElementById('chart_guages'));
 
       updateData();
-
-      function drawTable() {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Name');
-        data.addColumn('number', 'Last Reading');
-        data.addColumn('datetime', 'Reading Time');
-        data.addRows(lastReadings);
-
-        table.draw(data, { showRowNumber: true, width: '100%' });
-      }
-
     }
   </script>
 </head>
 
+<style></style>
+
 <body>
+  <div class="controls">
+    Data Points: <input type="number" value="30" id="numRecords"> Refresh Every: <input type="number" value="60" id="refreshInt">    seconds
+    <button onClick="forceRefresh()">Update Settings</button>
+  </div>
+
+  <br>
   <div id="chart_guages"></div>
-  <div id="chart_all"></div>
+
   <div id="chart_temp"></div>
   <div id="chart_humidity"></div>
   <div id="chart_light"></div>
+
+  <div id="chart_all"></div>
 </body>
 
 </html>

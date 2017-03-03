@@ -9,8 +9,8 @@
 #define WLAN_PASS       "fallout312345"
 #define AIO_SERVER      "mqtt.thingspeak.com"
 #define AIO_SERVERPORT  1883
-#define CHANNEL_ID      "a"
-#define PUBLISH_KEY     "a"
+#define CHANNEL_ID      ""
+#define PUBLISH_KEY     ""
 
 /************************* Pin Configuration *********************************/
 
@@ -18,7 +18,6 @@
 #define LED_CONNECTED     D1
 #define LED_PUBLISHING    D2
 #define DHTPIN            D3
-#define WEB_LED           D4
 #define LDR_PIN           A0
 
 /************************* Misc Configuration *********************************/
@@ -63,13 +62,9 @@ void setup() {
   pinMode(LED_DISCONNECTED, OUTPUT);
   pinMode(LED_PUBLISHING, OUTPUT);
   pinMode(LDR_PIN, INPUT);
-  pinMode(WEB_LED, OUTPUT);
 
   // Set initial LED state
-  greenLED(false);
-  blueLED(false);
-  redLED(true);
-  digitalWrite(WEB_LED, HIGH);
+  RGB(true, false, false);
 
   // Boot application
   Serial.println("Home Weather Station 1.0.0");
@@ -85,6 +80,7 @@ void setup() {
 void loop() {
   runPing(false);
   publishData();
+  //runLEDTest();
   
   delay(TICK_INTERVAL_MS);
 }
@@ -99,22 +95,16 @@ void runPing(bool forcePing) {
     return;
   }
 
-  redLED(false);
-  greenLED(true);
-  blueLED(true);
+  RGB(false, false, true);
   Serial.print("Running ping ... ");
 
   if(!mqtt.ping(3)) {
-    redLED(true);
-    greenLED(false);
-    blueLED(false);
+    RGB(true, false, false);
     Serial.println("FAILED - attempting reconnection");
     MQTT_connect();
   } else {
     Serial.println("SUCCESS");
-    redLED(false);
-    greenLED(true);
-    blueLED(false);
+    RGB(false, true, false);
   }
 
   // Reset the tick counter so we can do this all over again
@@ -150,13 +140,26 @@ void publishData() {
   Serial.print("   >> ");
   Serial.println(msgBuffer);
 
-  blueLED(true);
+  RGB(false, false, true);
   bool success = mqtt.publish("channels/" CHANNEL_ID "/publish/" PUBLISH_KEY, msgBuffer);
-  blueLED(false);
+  RGB(false, true, false);
 
   // Decide if we need to re-publish the data, or mark this as a success
   Serial.println(success ? "SUCCESS" : "FAILED");
   tickCountTemp = success ? 0 : tickCountTemp;
+}
+
+void runLEDTest() {
+  Serial.println("Red");
+  RGB(true, false, false);
+  delay(1000);
+
+  Serial.println("Green");
+  RGB(false, true, false);
+  delay(1000);
+
+  Serial.println("Blue");
+  RGB(false, false, true);
 }
 
 
@@ -260,32 +263,17 @@ void readLdrValue() {
   Serial.println("Updated LDR value");
 }
 
-void blueLED(bool ledOn) {
-  if( ledOn == true ) {
-    digitalWrite(LED_PUBLISHING, LOW);
-    return;
-  }
-
-  digitalWrite(LED_PUBLISHING, HIGH);
-}
-
-void redLED(bool ledOn) {
-  if( ledOn == true ) {
-    digitalWrite(LED_DISCONNECTED, LOW);
-    return;
-  }
-
+void RGB(bool redOn, bool greenOn, bool blueOn) {
+  // Turn all off
   digitalWrite(LED_DISCONNECTED, HIGH);
-}
-
-void greenLED(bool ledOn) {
-  if( ledOn == true ) {
-    digitalWrite(LED_CONNECTED, LOW);
-    return;
-  }
-
   digitalWrite(LED_CONNECTED, HIGH);
-}
+  digitalWrite(LED_PUBLISHING, HIGH);
+
+  // Turn requested LED on
+  if( redOn ) digitalWrite(LED_DISCONNECTED, LOW);
+  if( greenOn ) digitalWrite(LED_CONNECTED, LOW);
+  if( blueOn ) digitalWrite(LED_PUBLISHING, LOW);
+};
 
 
 

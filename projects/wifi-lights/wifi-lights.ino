@@ -185,7 +185,6 @@ void handleNotFound() {
 
 void setup ( void ) {
   pinMode(RELAY_PIN , OUTPUT);
-  pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, HIGH);
   Serial.begin ( 9600 );
   WiFi.begin ( ssid, password );

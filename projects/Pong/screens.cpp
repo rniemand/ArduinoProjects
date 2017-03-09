@@ -12,7 +12,9 @@ class Screens {
   Adafruit_PCD8544 display;
   
   public:
-    Screens(Adafruit_PCD8544& _display) : display(_display) {
+    Screens(Adafruit_PCD8544& _display) 
+      : display(_display) // initilizer list
+    {
       //display = _display;
       display.begin();
     };
@@ -36,4 +38,3 @@ class Screens {
       display.display();
     };
 };
-

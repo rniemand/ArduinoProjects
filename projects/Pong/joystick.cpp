@@ -1,58 +1,49 @@
 #pragma once
 #include "Arduino.h"
+#include "joystick.h"
 
 // FYI: http://stackoverflow.com/questions/8964164/single-class-has-a-class-redefinition-error
 
-enum Direction { UP, DOWN, LEFT, RIGHT, NONE };
+Joystick::Joystick(int xPin, int yPin, int buttonPin) {
+  _pinX = xPin;
+  _pinY = yPin;
+  _pinBtn = buttonPin;
+  
+  _upThreshold = 512 + 100;
+  _downThreshold = 512 - 100;
+  _leftThreshold = 512 + 100;
+  _rightThreshold = 512 - 100;
+}
 
-class Joystick {
-  int pinX, pinY, pinBtn, upThreshold, downThreshold, leftThreshold, rightThreshold;
-  public:
-    Direction xDirection, yDirection;
-    
-    Joystick(int xPin, int yPin, int buttonPin) {
-      pinX = xPin;
-      pinY = yPin;
-      pinBtn = buttonPin;
+void Joystick::setThresholdY(int left, int right) {
+  _leftThreshold = 512 + left;
+  _rightThreshold = 512 - right;
+}
 
-      upThreshold = 512 + 100;
-      downThreshold = 512 - 100;
-      leftThreshold = 512 + 100;
-      rightThreshold = 512 - 100;
-    };
+void Joystick::setThresholdsX(int up, int down) {
+  _upThreshold = 512 - up;
+  _downThreshold = 512 + down;
+}
 
-    Joystick();
-    
-    int x, y, btn;
+void Joystick::setThresholds(int up, int down, int left, int right) {
+  setThresholdsX(up, down);
+  setThresholdY(left, right);
+}
 
-    void update() {
-      x = analogRead(pinX);
-      y = analogRead(pinY);
-      btn = digitalRead(pinBtn) == 0;
+void Joystick::update() {
+  x = analogRead(_pinX);
+  y = analogRead(_pinY);
+  btn = digitalRead(_pinBtn) == 0;
 
-      // Set direction for X
-      if( x < upThreshold ) { xDirection = UP; }
-      else if( x > downThreshold ) { xDirection = DOWN; }
-      else { xDirection = NONE; }
+  // Set direction for X
+  if( x < _upThreshold ) { xDirection = UP; }
+  else if( x > _downThreshold ) { xDirection = DOWN; }
+  else { xDirection = NONE; }
 
-      // Set direction for Y
-      if( y < rightThreshold ) { yDirection = RIGHT; }
-      else if( y > leftThreshold ) { yDirection = LEFT; }
-      else { yDirection = NONE; }
-    }
-
-    void setThresholdsX(int up, int down) {
-      upThreshold = 512 - up;
-      downThreshold = 512 + down;
-    }
-
-    void setThresholdY(int left, int right) {
-      leftThreshold = 512 + left;
-      rightThreshold = 512 - right;
-    }
-
-    void setThresholds(int up, int down, int left, int right) {
-      setThresholdsX(up, down);
-      setThresholdY(left, right);
-    }
+  // Set direction for Y
+  if( y < _rightThreshold ) { yDirection = RIGHT; }
+  else if( y > _leftThreshold ) { yDirection = LEFT; }
+  else { yDirection = NONE; }
 };
+
+

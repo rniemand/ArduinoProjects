@@ -1,15 +1,3 @@
-/* Nokia 5100 LCD Example Code
-   Graphic LCD Pin ---------- Arduino Pin
-       1-VCC       ----------------  5V
-       2-GND       ----------------  GND
-       3-SCE       ----------------  7
-       4-RST       ----------------  6
-       5-D/C       ----------------  5
-       6-DN(MOSI)  ----------------  11
-       7-SCLK      ----------------  13
-       8-LED       - 330 Ohm res --  9
-*/
-
 /* ***********************************************************************
 * Pong 1.0 (Richard Niemand)
 * ************************************************************************
@@ -47,9 +35,8 @@
 *********************************************************************** */
 #include <Adafruit_GFX.h>
 #include <Adafruit_PCD8544.h>
-//#include "pong.cpp"
-#include "joystick.cpp"
-#include "screens.cpp"
+#include "joystick.h"
+#include "pong.h"
 
 const int BALL_WIDTH     = 2;
 const int PADDLE_WIDTH   = 2;
@@ -62,9 +49,11 @@ const int JOY_X          = A0;
 const int JOY_Y          = A1;
 const int JOY_BTN        = 4;
 
-Adafruit_PCD8544 display = Adafruit_PCD8544(13, 11, 5, 7, 6); // SCLK, DIN, DC, CS, RST
-Joystick* joy = new Joystick(JOY_X, JOY_Y, JOY_BTN);
-//Screens* screens = new Screens(display);
+Adafruit_PCD8544 display(13, 11, 5, 7, 6); // SCLK, DIN, DC, CS, RST
+Joystick joy(JOY_X, JOY_Y, JOY_BTN);
+PongGame pong(10, joy);
+
+//delete joy
 
 // Game screens
 bool onStartScreen        = true;
@@ -96,7 +85,7 @@ void setup()
 
   // PongGame* pong = new PongGame(GAME_SPEED, *joy);
 
-  joy->setThresholds(100, 100, 100, 100);
+  joy.setThresholds(100, 100, 100, 100);
   //screens->setCurrentScreen(START);
   
   display.begin();
@@ -141,7 +130,7 @@ void movePaddles() {
 
 void movePlayerPaddle() {
   // Player has pressed the UP button
-  if( joy->xDirection == UP ) {
+  if( joy.xDirection == UP ) {
     // Check to see if we are colliding with the top boundary
     if( paddle1Y > BOUNDRY_HEIGHT ) {
       paddle1Y -= 1;
@@ -149,7 +138,7 @@ void movePlayerPaddle() {
   }
 
   // Player has pressed the DOWN button
-  if( joy->xDirection == DOWN ) {
+  if( joy.xDirection == DOWN ) {
     // Check to see if we are colliding with the bottom boundary
     if( (paddle1Y + PADDLE_HEIGHT) < (display.height() - BOUNDRY_HEIGHT) ) {
       paddle1Y += 1;
@@ -216,10 +205,10 @@ void resetBall() {
 // ========================================== >
 //IO
 void readButtons() {
-  joy->update();
+  joy.update();
 
   // super simple button press limiting
-  if( joy->btn == 1 && (millis() - lastDebounceTime) > debounceDelay ) {
+  if( joy.btn == 1 && (millis() - lastDebounceTime) > debounceDelay ) {
     lastDebounceTime = millis();
 
     if( onInstructionScreen == true ) {

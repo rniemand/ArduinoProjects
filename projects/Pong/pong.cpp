@@ -1,23 +1,15 @@
 #include "Arduino.h"
-#include "joystick.cpp"
+#include "joystick.h"
+#include "pong.h"
 
-class PongGame {
-  Joystick joystick;
-  int ballWidth;
-  int paddleWidth;
-  int paddleHeight;
-  int boundaryHeight;
-  int gameSpeed;
+// using * allows lazy assignment (provided all names match) <- not a safe / good idea
+PongGame::PongGame(int gameSpeed, Joystick& joystick)
+  : _joystick(joystick)
+{
+  _ballWidth = 2;
+  _paddleWidth = 2;
+  _paddleHeight = 10;
+  _boundaryHeight = 2;
+  _gameSpeed = gameSpeed;
+}
 
-  public:
-    PongGame(int _gameSpeed, Joystick _joystick) {
-      ballWidth = 2;
-      paddleWidth = 2;
-      paddleHeight = 10;
-      boundaryHeight = 2;
-      gameSpeed = _gameSpeed;
-      joystick = _joystick;
-
-      Serial.println("hello world from pong");
-    }
-};

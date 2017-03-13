@@ -20,7 +20,7 @@ var updateBtn = function (x) {
 };
 
 function toggleLights() {
-  ajax((cb.checked ? 'on.html' : 'off.html'), updateBtn);
+  ajax((cb.checked ? 'on.htm' : 'off.htm'), updateBtn);
 }
 
 function getSensorData() {
@@ -30,10 +30,15 @@ function getSensorData() {
     $('temp').innerText = data.temperature + ' * C';
     $('heat').innerText = Math.round(data.heatIndex) + ' * C';
     $('light').innerText = data.light;
-    setTimeout(getSensorData, 5000);
+    $('freeHeap').innerText = data.freeHeap;
+    $('tickInt').innerText = data.tickInt;
+    $('pubInt').innerText = data.pubInt + ' ' + Math.floor(data.pubTickCount / data.pubInt * 100) + '%';
+    $('pingInt').innerText = data.pingInt + ' ' + Math.floor(data.pingTickCount / data.pingInt * 100) + '%';
+    $('updateSensorInt').innerText = data.updateSensorInt + ' ' + Math.floor(data.updateTickCount / data.updateSensorInt * 100) + '%';
+    setTimeout(getSensorData, 2000);
   });
 }
 
 // Kick everything off
-ajax('status.html', updateBtn);
+ajax('status.htm', updateBtn);
 getSensorData();

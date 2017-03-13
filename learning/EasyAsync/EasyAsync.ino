@@ -2,16 +2,39 @@
 #include <ESP8266mDNS.h>
 #include <ArduinoOTA.h>
 
-//#define FS_NO_GLOBALS //allow spiffs to coexist with SD card, define BEFORE including FS.h
+#define FS_NO_GLOBALS
 #include <FS.h>
-
-#include <Hash.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <SPIFFSEditor.h>
 
+
+#include "SPI.h"
+#include "SD.h"
+
+/*
+#define FS_NO_GLOBALS //allow spiffs to coexist with SD card, define BEFORE including FS.h
+
+#include <SD.h>
+
+#if defined(FS_NO_GLOBALS)
+#define SPFS fs::FS
+#define SPFILE fs::File
+#else
+#define SPFS FS
+#define SPFILE File
+#endif
+*/
+
+//#include <FS.h>
 //#include <SPI.h>
-//#include <SD.h>
+
+
+//#include <Hash.h>
+//#include <ESPAsyncTCP.h>
+//#include <ESPAsyncWebServer.h>
+//#include <SPIFFSEditor.h>
+
+
 
 
 // SKETCH BEGIN
@@ -118,11 +141,13 @@ void setup(){
   //Send OTA events to the browser
   ArduinoOTA.onStart([]() { events.send("Update Start", "ota"); });
   ArduinoOTA.onEnd([]() { events.send("Update End", "ota"); });
+  
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     char p[32];
     sprintf(p, "Progress: %u%%\n", (progress/(total/100)));
     events.send(p, "ota");
   });
+  
   ArduinoOTA.onError([](ota_error_t error) {
     if(error == OTA_AUTH_ERROR) events.send("Auth Failed", "ota");
     else if(error == OTA_BEGIN_ERROR) events.send("Begin Failed", "ota");
@@ -130,7 +155,9 @@ void setup(){
     else if(error == OTA_RECEIVE_ERROR) events.send("Recieve Failed", "ota");
     else if(error == OTA_END_ERROR) events.send("End Failed", "ota");
   });
+  
   ArduinoOTA.setHostname(hostName);
+  
   ArduinoOTA.begin();
 
   MDNS.addService("http","tcp",80);
@@ -143,6 +170,7 @@ void setup(){
   events.onConnect([](AsyncEventSourceClient *client){
     client->send("hello!",NULL,millis(),1000);
   });
+ 
   server.addHandler(&events);
 
   server.addHandler(new SPIFFSEditor(http_username,http_password));
@@ -151,8 +179,7 @@ void setup(){
     request->send(200, "text/plain", String(ESP.getFreeHeap()));
   });
 
-  server.serveStatic("/", SPIFFS, "/www/")
-    .setDefaultFile("index.htm");
+  server.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.htm");
 
   server.onNotFound([](AsyncWebServerRequest *request){
     Serial.printf("NOT_FOUND: ");
@@ -200,6 +227,7 @@ void setup(){
 
     request->send(404);
   });
+  
   server.onFileUpload([](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final){
     if(!index)
       Serial.printf("UploadStart: %s\n", filename.c_str());
@@ -207,6 +235,7 @@ void setup(){
     if(final)
       Serial.printf("UploadEnd: %s (%u)\n", filename.c_str(), index+len);
   });
+  
   server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
     if(!index)
       Serial.printf("BodyStart: %u\n", total);
@@ -214,6 +243,7 @@ void setup(){
     if(index + len == total)
       Serial.printf("BodyEnd: %u\n", total);
   });
+  
   server.begin();
 }
 

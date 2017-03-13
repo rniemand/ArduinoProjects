@@ -157,7 +157,7 @@ void handleNotFound() {
 
   Serial.println("Attempting to send file: " + filePath);
   
-  String message = "";
+  String message = F("");
   int code = 200;
   String contentType = "text/plain";
 

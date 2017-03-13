@@ -83,15 +83,13 @@ input:checked + .slider:before {
 }
 
 .sensor_value td:nth-child(2) {
-  width: 80px !important;
   text-align: right;
 }
 
 .sensors {
-  display: inline-block;
   width: 300px;
 }
 
-.sensors tbody {
-  width: 300px;
+div.center {
+  text-align: center;
 }

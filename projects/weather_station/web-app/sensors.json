@@ -2,5 +2,13 @@
   "temperature": 36,
   "heatIndex": 34.105,
   "humidity": 66,
-  "light": 720
+  "light": 720,
+  "freeHeap": 150,
+  "tickInt": 100,
+  "pubInt": 3000,
+  "pingInt": 100,
+  "updateSensorInt": 15,
+  "pubTickCount": 100,
+  "pingTickCount": 15,
+  "updateTickCount": 10
 }

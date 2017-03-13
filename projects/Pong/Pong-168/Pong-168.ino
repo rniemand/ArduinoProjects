@@ -36,41 +36,36 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_PCD8544.h>
 #include "joystick.h"
-#include "pong.h"
 
-const int BALL_WIDTH     = 2;
-const int PADDLE_WIDTH   = 2;
-const int PADDLE_HEIGHT  = 10;
-const int BOUNDRY_HEIGHT = 2;
-const int GAME_SPEED     = 15; // higher = slower
-const int MAX_SCORE      = 5;
+const short BALL_WIDTH     = 2;
+const short PADDLE_WIDTH   = 2;
+const short PADDLE_HEIGHT  = 10;
+const short BOUNDRY_HEIGHT = 2;
+const short GAME_SPEED     = 15; // higher = slower
+const short MAX_SCORE      = 5;
 const bool DEBUG_ENABLED = false;
-const int JOY_X          = A0;
-const int JOY_Y          = A1;
-const int JOY_BTN        = 4;
+const short JOY_X          = A0;
+const short JOY_Y          = A1;
+const short JOY_BTN        = 4;
 
-Adafruit_PCD8544 display(13, 11, 5, 7, 6); // SCLK, DIN, DC, CS, RST
-Joystick joy(JOY_X, JOY_Y, JOY_BTN);
-PongGame pong(10, joy);
-
-//delete joy
+Adafruit_PCD8544          display(12, 11, 5, 7, 6); // SCLK, DIN, DC, CS, RST
+Joystick                  joy(JOY_X, JOY_Y, JOY_BTN);
 
 // Game screens
 bool onStartScreen        = true;
 bool inGame               = false;
-bool onInstructionScreen  = false;
 bool isGameOver           = false;
 
 const int PADDLEY_LOCK   = (display.width() - 2);
 bool gamePaused          = false;
-int paddle1Y             = (display.height() / 2) - (10 / PADDLE_WIDTH);
-int paddle2Y             = (display.height() / 2) - (10 / PADDLE_WIDTH);
-int ballX                = display.width()/2;
-int ballY                = display.height()/2;
-int ballSpeedX           = -1;
-int ballSpeedY           = 1;
-int player1Score         = 0;
-int player2Score         = 0;
+short paddle1Y             = (display.height() / 2) - (10 / PADDLE_WIDTH);
+short paddle2Y             = (display.height() / 2) - (10 / PADDLE_WIDTH);
+short ballX                = display.width()/2;
+short ballY                = display.height()/2;
+short ballSpeedX           = -1;
+short ballSpeedY           = 1;
+short player1Score         = 0;
+short player2Score         = 0;
 
 unsigned long lastDebounceTime    = 0;
 unsigned long debounceDelay       = 200;
@@ -86,7 +81,6 @@ void setup()
   // PongGame* pong = new PongGame(GAME_SPEED, *joy);
 
   joy.setThresholds(100, 100, 100, 100);
-  //screens->setCurrentScreen(START);
   
   display.begin();
   display.setContrast(50);
@@ -99,7 +93,6 @@ void loop() {
 
   showGameOver();
   showStartScreen();
-  showInstructionScreen();
   runGameLoop();
 
   delay(GAME_SPEED);
@@ -211,21 +204,13 @@ void readButtons() {
   if( joy.btn == 1 && (millis() - lastDebounceTime) > debounceDelay ) {
     lastDebounceTime = millis();
 
-    if( onInstructionScreen == true ) {
-      onStartScreen = false;
-      onInstructionScreen = false;
-      inGame = true;
-    }
-
     if( inGame == true ) {
       gamePaused = !gamePaused;
-      Serial.println("toggling game paused state!");
     }
 
     if( onStartScreen == true ) {
       onStartScreen = false;
-      onInstructionScreen = true;
-      inGame = false;
+      inGame = true;
     }
   }
 }
@@ -275,21 +260,6 @@ void showStartScreen() {
   display.display();
 }
 
-void showInstructionScreen() {
-  if( !onInstructionScreen ) {
-    return;
-  }
-
-  display.clearDisplay();
-  
-  display.print("First to ");
-  display.print(MAX_SCORE, DEC);
-  display.print(" wins! Press START to begin");
-  display.println();
-
-  display.display();
-}
-
 void showGameOver() {
   if( !isGameOver ) {
     return;
@@ -329,45 +299,6 @@ void checkCollisions() {
   checkCollisionLeft();
 }
 
-void logCollision(String point, String additional) {
-  if( !DEBUG_ENABLED ) {
-    return;
-  }
-  
-  Serial.print("COLLISION: ");
-  Serial.print(point);
-  Serial.print(" ");
-  
-  Serial.print("Ball (x: ");
-  Serial.print(ballX - BALL_WIDTH, DEC);
-  Serial.print("-");
-  Serial.print(ballX + BALL_WIDTH, DEC);
-  Serial.print(", y:");
-  Serial.print(ballY - BALL_WIDTH, DEC);
-  Serial.print("-");
-  Serial.print(ballY + BALL_WIDTH, DEC);
-  Serial.print(")");
-
-  Serial.print(" Paddle 1: (x: 0, y:");
-  Serial.print(paddle1Y, DEC);
-  Serial.print("-");
-  Serial.print(paddle1Y + PADDLE_HEIGHT, DEC);
-  Serial.print(")");
-
-  Serial.print(" Paddle 2: (");
-  Serial.print(PADDLEY_LOCK, DEC);
-  Serial.print(",");
-  Serial.print(paddle2Y, DEC);
-  Serial.print("-");
-  Serial.print(paddle2Y + PADDLE_HEIGHT, DEC);
-  Serial.print(")");
-
-  Serial.print(" ");
-  Serial.print(additional);
-
-  Serial.println();
-}
-
 int collision_bottomY = display.height() - 2;
 int collision_rightX  = display.width() - 2;
 int collision_topY    = 2;
@@ -382,7 +313,6 @@ void checkCollisionBottom() {
 
   // Flip the speed of the ball to change direction
   ballSpeedY = ballSpeedY * -1;
-  logCollision("BOTTOM", "");
 }
 
 void checkCollisionRight() {
@@ -395,7 +325,6 @@ void checkCollisionRight() {
   if( (ballY + halfBallWidth) < paddle2Y ) {
     player1Score += 1;
     resetBall();
-    logCollision("LEFT ", "Point P1 (over)");
     showScores();
     return;
   }
@@ -404,14 +333,12 @@ void checkCollisionRight() {
   if( (ballY - halfBallWidth) > (paddle2Y + PADDLE_HEIGHT) ) {
     player1Score += 1;
     resetBall();
-    logCollision("LEFT ", "Point P1 (under)");
     showScores();
     return;
   }
   
   // Ball collided with the paddle
   ballSpeedX = ballSpeedX * -1;
-  logCollision("RIGHT ", "Hit paddle");
 }
 
 void checkCollisionTop() {
@@ -421,7 +348,6 @@ void checkCollisionTop() {
   }
 
   ballSpeedY = ballSpeedY * -1;
-  logCollision("TOP   ", "");
 }
 
 void checkCollisionLeft() {
@@ -434,7 +360,6 @@ void checkCollisionLeft() {
   if( (ballY + halfBallWidth) < paddle1Y ) {
     player2Score += 1;
     resetBall();
-    logCollision("LEFT ", "Point CPU (over)");
     showScores();
     return;
   }
@@ -443,12 +368,10 @@ void checkCollisionLeft() {
   if( (ballY - halfBallWidth) > (paddle1Y + PADDLE_HEIGHT) ) {
     player2Score += 1;
     resetBall();
-    logCollision("LEFT ", "Point CPU (under)");
     showScores();
     return;
   }
   
   // Ball collided with the paddle
   ballSpeedX = ballSpeedX * -1;
-  logCollision("LEFT  ", "Hit paddle");
 }

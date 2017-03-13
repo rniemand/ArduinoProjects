@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Lights</title>
+  <link rel="stylesheet" href="lights.css">
+  <style>
+
+  </style>
+</head>
+
+<body>
+  <h1>Lights</h1>
+  <div class="center">
+    <table class="controls" align="center">
+      <tr>
+        <td>
+          <label class="switch">
+          <input type="checkbox" id="tvlights" onClick="toggleLights()">
+          <div class="slider round"></div>
+        </label>
+        </td>
+        <td>
+          TV Lights
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <h1>Sensors</h1>
+  <div class="center">
+    <table class="sensors" align="center">
+      <tr class="sensor_value">
+        <td>Humidity:</td>
+        <td id="humidity">.</td>
+      </tr>
+      <tr class="sensor_value">
+        <td>Temperature:</td>
+        <td id="temp">.</td>
+      </tr>
+      <tr class="sensor_value">
+        <td>Heat Index:</td>
+        <td id="heat">.</td>
+      </tr>
+      <tr class="sensor_value">
+        <td>Light Reading:</td>
+        <td id="light">.</td>
+      </tr>
+    </table>
+  </div>
+
+  <h1>Status</h1>
+  <div class="center">
+    <table class="sensors" style="width: 350px;" align="center">
+      <tbody>
+        <tr class="sensor_value">
+          <td>Free Heap:</td>
+          <td id="freeHeap">.</td>
+        </tr>
+        <tr class="sensor_value">
+          <td>Tick Int:</td>
+          <td id="tickInt">.</td>
+        </tr>
+        <tr class="sensor_value">
+          <td>Publish:</td>
+          <td id="pubInt">.</td>
+        </tr>
+        <tr class="sensor_value">
+          <td>Ping:</td>
+          <td id="pingInt">.</td>
+        </tr>
+        <tr class="sensor_value">
+          <td>Sensors:</td>
+          <td id="updateSensorInt">.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script src="lights.js"></script>
+</body>
+
+</html>

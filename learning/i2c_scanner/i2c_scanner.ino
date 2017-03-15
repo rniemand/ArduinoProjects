@@ -6,6 +6,9 @@
 
 void setup() {
   Serial.begin (9600);
+  
+  //pinMode(2, INPUT_PULLUP);
+  //pinMode(3, INPUT_PULLUP);
 
   // Leonardo: wait for serial port to connect
   while (!Serial) 

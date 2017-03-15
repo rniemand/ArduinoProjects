@@ -1,4 +1,3 @@
-// Date and time functions using a DS3231 RTC connected via I2C and Wire lib
 #include <Wire.h>
 #include "RTClib.h"
 #include <LiquidCrystal_I2C.h>
@@ -13,27 +12,25 @@ void setup () {
   Wire.begin();
   Serial.begin(9600);
 
-  delay(50); // wait for console opening
-
   setupLcd();
   setupRtc();
 
+  // Use this to set the correct time on the RTC module
   // setTime(2017, 3, 15, 21, 27, 0);
-  
 }
 
 void loop () {
   DateTime now = rtc.now();
-  
-  //lcd.clear();
-  
+
+  // Date row
   lcd.setCursor(0, 0);
   lcd.print(daysOfTheWeek[now.dayOfTheWeek()]);
   lcd.print(" ");
   lcd.print(now.day() < 10 ? "0" + String(now.day()) : now.day());
   lcd.print(" ");
   lcd.print(monthsOfTheYear[now.month() - 1]);
-  
+
+  // Time row
   lcd.setCursor(0, 1);
   lcd.print(now.hour() < 10 ? "0" + String(now.hour()) : now.hour());
   lcd.print(":");
@@ -44,7 +41,6 @@ void loop () {
   //Serial.println();
   delay(100);
 }
-
 
 void setupLcd() {
   // put your setup code here, to run once:
@@ -65,5 +61,4 @@ void setTime(int y, int m, int d, int h, int i, int s) {
   Serial.println("Setting time");
   rtc.adjust(DateTime(y, m, d, h, i, s));
 }
-
 

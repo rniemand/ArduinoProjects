@@ -14,8 +14,8 @@
 #define WLAN_PASS       "fallout312345"
 #define AIO_SERVER      "mqtt.thingspeak.com"
 #define AIO_SERVERPORT  1883
-#define CHANNEL_ID      ""
-#define PUBLISH_KEY     ""
+#define CHANNEL_ID      "t"
+#define PUBLISH_KEY     "t"
 
 /************************* Pin Configuration *********************************/
 
@@ -34,7 +34,7 @@
 
 bool DEBUG                = false;  // Indicator that we should print data onto the Serial connection.
 
-bool SENSORS_CONNECTED    = false;   // If set to false we will skip the waiting on, and publishing of all sensor data
+bool SENSORS_CONNECTED    = true;   // If set to false we will skip the waiting on, and publishing of all sensor data
 
 short TICK_INTERVAL_MS    = 100;    // The sleep time between runs of the loop() method. This is value is used as the multiplier 
                                     // when configuring the publish interval for temperature and light data.
@@ -175,11 +175,6 @@ void publishData() {
 
   // Ensure that we are connected
   runPing(true);
-
-  // NOTE: data is being refreshed in the loop going forward...
-  //// Refresh our readings
-  //readLdrValue();
-  //readDhtValues();
 
   Serial.println("Publishing Temperatue data...");
 
@@ -366,8 +361,8 @@ void handleSensors() {
   out += "  \"light\": " + light + "\n";
   out += "}\n";
 
-  Serial.println("Sending sensor data to client");
-  Serial.println(out);
+  //Serial.println("Sending sensor data to client");
+  //Serial.println(out);
   server.send ( 200, "application/json", out );
 }
 

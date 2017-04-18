@@ -1,11 +1,22 @@
- #include "FastLED.h"
+#include "FastLED.h"
 
-// How many leds in your strip?
-#define NUM_LEDS 36
-#define DATA_PIN 3
-#define ANIMATION_DELAY 50
+/* ********************************************************************************************************
+ *  Config
+ ******************************************************************************************************** */
+#define NUM_LEDS            36
+#define DATA_PIN            3
+int ANIMATION_DELAY         = 50;
+
 CRGB leds[NUM_LEDS];
 
+/* ********************************************************************************************************
+ *    Pin Out
+ * ********************************************************************************************************
+ *    A1 .................... Button (to GND)
+ *    D3 .................... LED Data Line
+ *    
+ * ****************************************************************************************************** */
+ 
 void setup() {
   pinMode(A1, INPUT_PULLUP);
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
@@ -17,19 +28,35 @@ void loop() {
   }
 }
 
+// ********************************************************************************************************
+CRGB randomColor() {
+  return CRGB( random(20, 255), random(20, 255), random(20, 255) );
+}
+
 void runSpin() {
+  spinAnimation1();
+  delay(1000);
+  spinAnimation4();
+  delay(4000);
+  
   // Play a random animation
-  switch(random(1, 11)) {
+  switch(random(1, 15)) {
     case 1: spinAnimation1(); break;
     case 2: spinAnimation2(); break;
     case 3: spinAnimation3(); break;
     case 4: spinAnimation4(); break;
     case 5: spinAnimation5(); break;
     case 6: spinAnimation6(); break;
+    /*
     case 7: spinAnimation7(); break;
     case 8: spinAnimation8(); break;
     case 9: spinAnimation9(); break;
     case 10: spinAnimation10(); break;
+    case 11: spinAnimation11(); break;
+    case 12: spinAnimation12(); break;
+    case 13: spinAnimation13(); break;
+    case 14: spinAnimation14(); break;
+    */
     default: spinAnimation1(); break;
   }
 
@@ -72,90 +99,40 @@ void renderNumber(int number) {
 
 void one() {
   clearDisplay();
-  leds[10] = CRGB(51, 161, 241);
-  leds[16] = CRGB(51, 161, 241);
-  leds[22] = CRGB(51, 161, 241);
-  leds[28] = CRGB(51, 161, 241);
-  leds[34] = CRGB(51, 161, 241);
-  FastLED.show();
+  short pins[] = {33,32,26,20,14,8,9,7};
+  colorArray(pins, 8, ANIMATION_DELAY/2, randomColor());
+
+  delay(250);
 }
 
 void two() {
   clearDisplay();
-  leds[8] = CRGB(233, 0, 255);
-  leds[9] = CRGB(233, 0, 255);
-  leds[10] = CRGB(233, 0, 255);
-  leds[16] = CRGB(233, 0, 255);
-  leds[20] = CRGB(233, 0, 255);
-  leds[21] = CRGB(233, 0, 255);
-  leds[22] = CRGB(233, 0, 255);
-  leds[26] = CRGB(233, 0, 255);
-  leds[32] = CRGB(233, 0, 255);
-  leds[33] = CRGB(233, 0, 255);
-  leds[34] = CRGB(233, 0, 255);
-  FastLED.show();
+  short pins[] = {33,32,31,25,19,20,21,15,9,8,7};
+  colorArray(pins, 11, ANIMATION_DELAY/2, randomColor());
 }
 
 void three() {
   clearDisplay();
-  leds[8] = CRGB(255, 0, 0);
-  leds[9] = CRGB(255, 0, 0);
-  leds[10] = CRGB(255, 0, 0);
-  leds[14] = CRGB(255, 0, 0);
-  leds[20] = CRGB(255, 0, 0);
-  leds[21] = CRGB(255, 0, 0);
-  leds[22] = CRGB(255, 0, 0);
-  leds[26] = CRGB(255, 0, 0);
-  leds[32] = CRGB(255, 0, 0);
-  leds[33] = CRGB(255, 0, 0);
-  leds[34] = CRGB(255, 0, 0);
-  FastLED.show();
+  short pins[] = {33,32,31,25,19,13,7,8,9,20,21};
+  colorArray(pins, 11, ANIMATION_DELAY/2, randomColor());
 }
 
 void four() {
   clearDisplay();
-  leds[8] = CRGB(22, 255, 0);
-  leds[14] = CRGB(22, 255, 0);
-  leds[15] = CRGB(22, 255, 0);
-  leds[16] = CRGB(22, 255, 0);
-  leds[20] = CRGB(22, 255, 0);
-  leds[22] = CRGB(22, 255, 0);
-  leds[28] = CRGB(22, 255, 0);
-  leds[34] = CRGB(22, 255, 0);
-  FastLED.show();
+  short pins[] = {33,27,21,20,19,25,31,13,7};
+  colorArray(pins, 9, ANIMATION_DELAY/2, randomColor());
 }
 
 void five() {
   clearDisplay();
-  leds[8] = CRGB(238, 255, 0);
-  leds[9] = CRGB(238, 255, 0);
-  leds[10] = CRGB(238, 255, 0);
-  leds[14] = CRGB(238, 255, 0);
-  leds[20] = CRGB(238, 255, 0);
-  leds[21] = CRGB(238, 255, 0);
-  leds[22] = CRGB(238, 255, 0);
-  leds[28] = CRGB(238, 255, 0);
-  leds[32] = CRGB(238, 255, 0);
-  leds[33] = CRGB(238, 255, 0);
-  leds[34] = CRGB(238, 255, 0);
-  FastLED.show();
+  short pins[] = {31,32,33,27,21,20,19,13,7,8,9};
+  colorArray(pins, 11, ANIMATION_DELAY/2, randomColor());
 }
 
 void six() {
   clearDisplay();
-  leds[8] = CRGB(255, 0, 254);
-  leds[9] = CRGB(255, 0, 254);
-  leds[10] = CRGB(255, 0, 254);
-  leds[14] = CRGB(255, 0, 254);
-  leds[16] = CRGB(255, 0, 254);
-  leds[20] = CRGB(255, 0, 254);
-  leds[21] = CRGB(255, 0, 254);
-  leds[22] = CRGB(255, 0, 254);
-  leds[28] = CRGB(255, 0, 254);
-  leds[32] = CRGB(255, 0, 254);
-  leds[33] = CRGB(255, 0, 254);
-  leds[34] = CRGB(255, 0, 254);
-  FastLED.show();
+  short pins[] = {31,32,33,27,21,20,19,13,7,8,9,15};
+  colorArray(pins, 12, ANIMATION_DELAY/2, randomColor());
 }
 
 void unknown() {
@@ -179,62 +156,39 @@ void spinAnimation1() {
   clearDisplay();
 
   short a[] = {0,2,4,7,9,11,12,14,16,19,21,23,24,26,28,31,33,35};
-  colorArray(a, 18, CRGB(125, 66, 241));
+  colorArray(a, 18, ANIMATION_DELAY, CRGB(125, 66, 241));
 
   short b[] = {1,3,5,6,8,10,13,15,17,18,20,22,25,27,29,30,32,34};
-  colorArray(b, 18, CRGB(241, 237, 66));
+  colorArray(b, 18, ANIMATION_DELAY, CRGB(241, 237, 66));
   
   delay(250);
 }
 
 void spinAnimation2() {
-  CRGB color = CRGB(random(0,255), random(0,255), random(0,255));
-  
-  for(short i = 0; i < 5; i++) {
-    clearDisplay();
-    leds[0] = CRGB(color);
-    leds[2] = CRGB(color);
-    leds[4] = CRGB(color);
-    leds[6] = CRGB(color);
-    leds[8] = CRGB(color);
-    leds[10] = CRGB(color);
-    leds[12] = CRGB(color);
-    leds[14] = CRGB(color);
-    leds[16] = CRGB(color);
-    leds[18] = CRGB(color);
-    leds[20] = CRGB(color);
-    leds[22] = CRGB(color);
-    leds[24] = CRGB(color);
-    leds[26] = CRGB(color);
-    leds[28] = CRGB(color);
-    leds[30] = CRGB(color);
-    leds[32] = CRGB(color);
-    leds[34] = CRGB(color);
-    FastLED.show();
-    delay(ANIMATION_DELAY * 3);
+  clearDisplay();
 
-    clearDisplay();
-    leds[1] = CRGB(color);
-    leds[3] = CRGB(color);
-    leds[5] = CRGB(color);
-    leds[7] = CRGB(color);
-    leds[9] = CRGB(color);
-    leds[11] = CRGB(color);
-    leds[13] = CRGB(color);
-    leds[15] = CRGB(color);
-    leds[17] = CRGB(color);
-    leds[19] = CRGB(color);
-    leds[21] = CRGB(color);
-    leds[23] = CRGB(color);
-    leds[25] = CRGB(color);
-    leds[27] = CRGB(color);
-    leds[29] = CRGB(color);
-    leds[31] = CRGB(color);
-    leds[33] = CRGB(color);
-    leds[35] = CRGB(color);
-    FastLED.show();
-    delay(ANIMATION_DELAY * 3);
-  }
+  short a[] = {35,29,23,17,11,5};
+  colorArray(a, 6, ANIMATION_DELAY*2, randomColor());
+  delay(75);
+  
+  short b[] = {34,28,22,16,10,4};
+  colorArray(b, 6, ANIMATION_DELAY*2, randomColor());
+  delay(75);
+  
+  short c[] = {33,27,21,15,9,3};
+  colorArray(c, 6, ANIMATION_DELAY*2, randomColor());
+  delay(75);
+
+  short d[] = {32,26,20,14,8,2};
+  colorArray(d, 6, ANIMATION_DELAY*2, randomColor());
+  delay(75);
+
+  short e[] = {31,25,19,13,7,1};
+  colorArray(e, 6, ANIMATION_DELAY*2, randomColor());
+  delay(75);
+
+  short f[] = {30,24,18,12,6,0};
+  colorArray(f, 6, ANIMATION_DELAY*2, randomColor());
   
   delay(250);
 }
@@ -243,15 +197,13 @@ void spinAnimation3() {
   short offset = 0;
   
   for(short i = 0; i < 6; i++) {
-    CRGB color = CRGB(random(0,255), random(0,255), random(0,255));
-    
     clearDisplay();
-    leds[0 + offset] = CRGB(color);
-    leds[6 + offset] = CRGB(color);
-    leds[12 + offset] = CRGB(color);
-    leds[18 + offset] = CRGB(color);
-    leds[24 + offset] = CRGB(color);
-    leds[30 + offset] = CRGB(color);
+    leds[0 + offset] = randomColor();
+    leds[6 + offset] = randomColor();
+    leds[12 + offset] = randomColor();
+    leds[18 + offset] = randomColor();
+    leds[24 + offset] = randomColor();
+    leds[30 + offset] = randomColor();
     FastLED.show();
     delay(ANIMATION_DELAY * 3);
 
@@ -266,7 +218,7 @@ void spinAnimation4() {
 
   for(short j = 0; j < 6; j++) {
     for(short i = 0; i < NUM_LEDS; i++) {
-      leds[i] = CRGB(random(0,255), random(0,255), random(0,255));
+      leds[i] = randomColor();
     }
     FastLED.show();
     delay(ANIMATION_DELAY * 2);
@@ -279,7 +231,7 @@ void spinAnimation5() {
   clearDisplay();
 
   for(short i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CRGB(random(0,255), random(0,255), random(0,255));
+    leds[i] = randomColor();
     FastLED.show();
     delay(20);
   }
@@ -291,14 +243,15 @@ void spinAnimation6() {
   clearDisplay();
 
   for(short i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CRGB(random(0,255), random(0,255), random(0,255));
+    leds[i] = randomColor();
   }
 
   FastLED.show();
   delay(50);
 
+  CRGB black = CRGB(0,0,0);
   for(short i = NUM_LEDS; i >= 0; i--) {
-    leds[i] = CRGB(0,0,0);
+    leds[i] = black;
     FastLED.show();
     delay(20);
   }
@@ -306,6 +259,7 @@ void spinAnimation6() {
   delay(250);
 }
 
+/*
 void spinAnimation7() {
   short offset = 0;
 
@@ -352,13 +306,13 @@ void spinAnimation9() {
   clearDisplay();
 
   short middle[] = {14, 15, 21, 20};
-  colorArray(middle, 4, CRGB(255, 0, 0));
+  colorArray(middle, 4, ANIMATION_DELAY, CRGB(255, 0, 0));
 
   short inner[] = {7,8,9,10,16,22,28,27,26,25,19,13};
-  colorArray(inner, 12, CRGB(0, 255, 0));
+  colorArray(inner, 12, ANIMATION_DELAY, CRGB(0, 255, 0));
 
   short outer[] = {30,24,18,12,6,0,1,2,3,4,5,11,17,23,29,35,34,33,32,31};
-  colorArray(outer, 20, CRGB(0, 0, 255));
+  colorArray(outer, 20, ANIMATION_DELAY, CRGB(0, 0, 255));
   
   delay(250);
 }
@@ -367,18 +321,152 @@ void spinAnimation10() {
   clearDisplay();
 
   short middle[] = {30,31,32,33,34,35,29,23,17,11,5,4,3,2,1,0,6,12,18,24,25,26,27,28,22,16,10,9,8,7,13,19,20,21,15,14};
-  colorArray(middle, 36, CRGB(random(0, 255), random(0, 255), random(0, 255)));
+  colorArray(middle, 36, ANIMATION_DELAY, randomColor());
   
   delay(250);
 }
 
-void colorArray(short arr[], int arrSize, CRGB color) {
+void spinAnimation11() {
+  clearDisplay();
+
+  short a[] = {0};
+  colorArray(a, 1, 0, randomColor());
+  delay(20);
+
+  short b[] = {1,6};
+  colorArray(b, 2, 0, randomColor());
+  delay(20);
+
+  short c[] = {2,7,12};
+  colorArray(c, 3, 0, randomColor());
+  delay(20);
+
+  short d[] = {3,8,13,18};
+  colorArray(d, 4, 0, randomColor());
+  delay(20);
+
+  short e[] = {4,9,14,19,24};
+  colorArray(e, 5, 0, randomColor());
+  delay(20);
+
+  short f[] = {5,10,15,20,25,30};
+  colorArray(f, 6, 0, randomColor());
+  delay(20);
+
+  short g[] = {11,16,21,26,31};
+  colorArray(g, 5, 0, randomColor());
+  delay(20);
+
+  short h[] = {17,22,27,32};
+  colorArray(h, 4, 0, randomColor());
+  delay(20);
+
+  short i[] = {23,28,33};
+  colorArray(i, 3, 0, randomColor());
+  delay(20);
+
+  short j[] = {29,34};
+  colorArray(j, 2, 0, randomColor());
+  delay(20);
+
+  short k[] = {35};
+  colorArray(k, 1, 0, randomColor());
+  delay(20);
+  
+  delay(250);
+}
+
+void spinAnimation12() {
+  clearDisplay();
+
+  short k[] = {35};
+  colorArray(k, 1, 0, randomColor());
+  delay(20);
+
+  short j[] = {29,34};
+  colorArray(j, 2, 0, randomColor());
+  delay(20);
+
+  short i[] = {23,28,33};
+  colorArray(i, 3, 0, randomColor());
+  delay(20);
+
+  short h[] = {17,22,27,32};
+  colorArray(h, 4, 0, randomColor());
+  delay(20);
+
+  short g[] = {11,16,21,26,31};
+  colorArray(g, 5, 0, randomColor());
+  delay(20);
+
+  short f[] = {5,10,15,20,25,30};
+  colorArray(f, 6, 0, randomColor());
+  delay(20);
+
+  short e[] = {4,9,14,19,24};
+  colorArray(e, 5, 0, randomColor());
+  delay(20);
+
+  short d[] = {3,8,13,18};
+  colorArray(d, 4, 0, randomColor());
+  delay(20);
+
+  short c[] = {2,7,12};
+  colorArray(c, 3, 0, randomColor());
+  delay(20);
+  
+  short b[] = {1,6};
+  colorArray(b, 2, 0, randomColor());
+  delay(20);
+
+  short a[] = {0};
+  colorArray(a, 1, 0, randomColor());
+  delay(20);
+  
+  delay(250);
+}
+
+void spinAnimation13() {
+  clearDisplay();
+
+  short a[] = {35,29,23,17,11,5,4,3,2,1,0,6,12,18,24,30,31,32,33,34};
+  colorArray(a, 20, ANIMATION_DELAY/2, randomColor());
+  delay(75);
+  short b[] = {21,15,14,20};
+  colorArray(b, 4, ANIMATION_DELAY/2, randomColor());
+  
+  delay(250);
+}
+
+void spinAnimation14() {
+  clearDisplay();
+
+  short a[] = {21,15,14,20};
+  colorArray(a, 4, ANIMATION_DELAY/2, randomColor());
+  delay(75);
+  short b[] = {28,27,26,25,19,13,7,8,9,10,16,22};
+  CRGB color = randomColor();
+  for(short i = 0; i < 12; i++) {
+    colorSingle(b[i], ANIMATION_DELAY, color);
+  }
+  
+  delay(250);
+}
+
+*/
+
+void colorArray(short arr[], int arrSize, int animationDelay, CRGB color) {
   for (int i = 0; i < arrSize; i++) {
     leds[arr[i]] = color;
     FastLED.show();
-    delay(ANIMATION_DELAY);
+    delay(animationDelay);
   }
 }
 
+void colorSingle(short pixel, int animationDelay, CRGB color) {
+  leds[pixel] = color;
+  FastLED.show();
+  delay(animationDelay);
+}
 
 

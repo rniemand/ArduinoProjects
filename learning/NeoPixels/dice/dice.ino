@@ -34,24 +34,19 @@ CRGB randomColor() {
 }
 
 void runSpin() {
-  spinAnimation1();
-  delay(1000);
-  spinAnimation4();
-  delay(4000);
-  
   // Play a random animation
-  switch(random(1, 15)) {
+  switch(random(1, 11)) {
     case 1: spinAnimation1(); break;
     case 2: spinAnimation2(); break;
     case 3: spinAnimation3(); break;
     case 4: spinAnimation4(); break;
     case 5: spinAnimation5(); break;
     case 6: spinAnimation6(); break;
-    /*
     case 7: spinAnimation7(); break;
     case 8: spinAnimation8(); break;
     case 9: spinAnimation9(); break;
     case 10: spinAnimation10(); break;
+    /*
     case 11: spinAnimation11(); break;
     case 12: spinAnimation12(); break;
     case 13: spinAnimation13(); break;
@@ -259,7 +254,6 @@ void spinAnimation6() {
   delay(250);
 }
 
-/*
 void spinAnimation7() {
   short offset = 0;
 
@@ -326,6 +320,7 @@ void spinAnimation10() {
   delay(250);
 }
 
+/*
 void spinAnimation11() {
   clearDisplay();
 

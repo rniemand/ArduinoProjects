@@ -1,9 +1,9 @@
 //We always have to include the library
 #include "LedControl.h"
 
-//pin 12 is connected to the DataIn 
-//pin 11 is connected to the CLK 
-//pin 10 is connected to LOAD 
+// pin 12 is connected to the DataIn 
+// pin 11 is connected to the CLK 
+// pin 10 is connected to LOAD 
 
 LedControl lc = LedControl(12, 11, 10, 4);
 

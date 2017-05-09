@@ -1,13 +1,13 @@
 #include "LedControl.h"
 
-// pin 12 is connected to the DataIn 
+// pin 12 is connected to the DIN 
 // pin 11 is connected to the CLK 
 // pin 10 is connected to LOAD 
 
 const int NUM_DISPLAYS  = 4;
 LedControl lc           = LedControl(12, 11, 10, NUM_DISPLAYS);
-int NUM_ROWS            = 32;
-int                     rows[32];
+int NUM_ROWS            = 32;       // NUM_DISPLAYS * 8
+int                     rows[32];   // Same as NUM_ROWS
 
 void setup() {
   for(int address = 0; address < NUM_DISPLAYS; address++) {
@@ -17,14 +17,11 @@ void setup() {
   }
 }
 
-
 void loop() {
-  // http://wayoda.github.io/LedControl/pages/software
   shiftRows();
   rows[0] = random(1, 255);
   render();
-  
-  delay(75);
+  delay(50);
 }
 
 void shiftRows() {
@@ -34,9 +31,14 @@ void shiftRows() {
 }
 
 int workDisplayNumber(int rowNumber) {
+  if(rowNumber <= 7) {
+    return 0;
+  }
+  
   for(int i = 0; i < NUM_DISPLAYS; i++) {
-    int maxNum = (7 + (i * 8)) - 1; // 0-7 | 8-15 ...
-    if(rowNumber <= maxNum) {
+    int maxNumber = 7 + (i * 8);
+    
+    if(rowNumber <= maxNumber) {
       return i;
     }
   }
@@ -44,22 +46,23 @@ int workDisplayNumber(int rowNumber) {
   return 99;
 }
 
-int workColumnNum(int screenNum, int rowNumber) {
-  if(screenNum == 0) {
+int workColumnNum(int displayNumber, int rowNumber) {
+  // No need to map number if it's the first sreen
+  if(displayNumber == 0) {
     return rowNumber;
   }
 
-  int takeAway = (8 * screenNum) - 1;
-  return rowNumber - takeAway;
+  // Work out the relative column number for the given screen
+  return rowNumber - (8 * displayNumber);
 }
 
 void render() {
   for(int i = 0; i < NUM_ROWS; i++) {
-    int screenNum = workDisplayNumber(i);
-    int colNum = workColumnNum(screenNum, i);
-    int value = rows[i];
+    int displayNumber = workDisplayNumber(i);
+    int columnNumber  = workColumnNum(displayNumber, i);
+    int rowValue      = rows[i];
     
-    lc.setRow(screenNum, colNum, value);
+    lc.setRow(displayNumber, columnNumber, rowValue);
   }
 }
 

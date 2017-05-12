@@ -18,7 +18,7 @@ int                     rows[32];   // Same as NUM_ROWS
 int                     currentChar[8];
 int currentCharIdx      = 0;
 int currentCharLen      = 0;
-String message          = "READY";
+String message          = "Ready...";
 int messageIdx          = -1;
 int messageLen          = 0;
 bool messageChanged     = false;
@@ -36,6 +36,32 @@ int _6[]          = { B00111100, B01111110, B01001011, B01001001, B01111001, B00
 int _7[]          = { B00000011, B00000011, B01110001, B01111001, B00001111, B00000111 };
 int _8[]          = { B00110110, B01111111, B01001001, B01001001, B01111111, B00110110 };
 int _9[]          = { B00000110, B01001111, B01001001, B01101001, B00111111, B00011110 };
+int a[]           = { B00100000, B01110100, B01010100, B01010100, B00111100, B01111000, B01000000 };
+int b[]           = { B01000001, B01111111, B00111111, B01001000, B01001000, B01111000, B00110000 };
+int c[]           = { B00111000, B01111100, B01000100, B01000100, B01101100, B00101000 };
+int d[]           = { B00110000, B01111000, B01001000, B01001001, B00111111, B01111111 };
+int e[]           = { B00111000, B01111100, B01010100, B01010100, B01011100, B00011000 };
+int f[]           = { B01001000, B01111110, B01111111, B01001001, B00000011, B00000010 };
+int g[]           = { B10011000, B10111100, B10100100, B10100100, B11111000, B01111100, B00000100 };
+int h[]           = { B01000001, B01111111, B01111111, B00001000, B00000100, B01111100, B01111000 };
+int i[]           = { B00000000, B01000100, B01111101, B01111101, B01000000 };
+int j[]           = { B01100000, B11100000, B10000000, B10000000, B11111101, B01111101 };
+int k[]           = { B01000001, B01111111, B01111111, B00010000, B00111000, B01101100, B01000100 };
+int l[]           = { B00000000, B01000001, B01111111, B01111111, B01000000, B00000000 };
+int m[]           = { B01111100, B01111100, B00011000, B00111000, B00011100, B01111100, B01111000 };
+int n[]           = { B01111100, B01111100, B00000100, B00000100, B01111100, B01111000 };
+int o[]           = { B00111000, B01111100, B01000100, B01000100, B01111100, B00111000 };
+int p[]           = { B10000100, B11111100, B11111000, B10100100, B00100100, B00111100, B00011000 };
+int q[]           = { B00011000, B00111100, B00100100, B10100100, B11111000, B11111100, B10000100 };
+int r[]           = { B01000100, B01111100, B01111000, B01001100, B00000100, B00011100, B00011000 };
+int s[]           = { B01001000, B01011100, B01010100, B01010100, B01110100, B00100100 };
+int t[]           = { B00000000, B00000100, B00111110, B01111111, B01000100, B00100100 };
+int u[]           = { B00111100, B01111100, B01000000, B01000000, B00111100, B01111100, B01000000 };
+int v[]           = { B00011100, B00111100, B01100000, B01100000, B00111100, B00011100 };
+int w[]           = { B00111100, B01111100, B01110000, B00111000, B01110000, B01111100, B00111100 };
+int x[]           = { B01000100, B01101100, B00111000, B00010000, B00111000, B01101100, B01000100 };
+int y[]           = { B10011100, B10111100, B10100000, B10100000, B11111100, B01111100 };
+int z[]           = { B01001100, B01100100, B01110100, B01011100, B01001100, B01100100 };
 int A[]           = { B01111100, B01111110, B00010011, B00010011, B01111110, B01111100 };
 int B[]           = { B01000001, B01111111, B01111111, B01001001, B01001001, B01111111, B00110110 };
 int C[]           = { B00011100, B00111110, B01100011, B01000001, B01000001, B01100011, B00100010 };
@@ -86,6 +112,10 @@ int SQR_CLOSE[]   = { B00000000, B01000001, B01000001, B01111111, B01111111 };
 int UNDERSCORE[]  = { B01000000, B01000000, B01000000, B01000000, B01000000 };
 int SQUIG_OPEN[]  = { B00001000, B00001000, B00111110, B01110111, B01000001, B01000001 };
 int SQUIG_CLOSE[] = { B01000001, B01000001, B01110111, B00111110, B00001000, B00001000 };
+int AMPERSAND[]   = { B00001000, B00001100, B00000110, B00000011, B00000110, B00001100, B00001000 };
+int FWD_SLASH[]   = { B01100000, B00110000, B00011000, B00001100, B00000110, B00000011, B00000001 };
+int BACK_SLASH[]  = { B00000001, B00000011, B00000110, B00001100, B00011000, B00110000, B01100000 };
+int TILDA[]       = { B00000010, B00000011, B00000001, B00000011, B00000010, B00000011, B00000001 };
 
 
 void returnOK() {
@@ -168,7 +198,6 @@ void loop() {
   delay(25);
 }
 
-
 void clearDisplays() {
   for(int i = 0; i < NUM_ROWS; i++) {
     rows[i] = 0;
@@ -218,6 +247,7 @@ void mapLetter(){
     case '7': copyLetter(_7,            6); break;
     case '8': copyLetter(_8,            6); break;
     case '9': copyLetter(_9,            6); break;
+    
     case 'A': copyLetter(A,             6); break;
     case 'B': copyLetter(B,             7); break;
     case 'C': copyLetter(C,             7); break;
@@ -244,6 +274,34 @@ void mapLetter(){
     case 'X': copyLetter(X,             7); break;
     case 'Y': copyLetter(Y,             6); break;
     case 'Z': copyLetter(Z,             7); break;
+
+    case 'a': copyLetter(a,             7); break;
+    case 'b': copyLetter(b,             7); break;
+    case 'c': copyLetter(c,             6); break;
+    case 'd': copyLetter(d,             6); break;
+    case 'e': copyLetter(e,             6); break;
+    case 'f': copyLetter(f,             6); break;
+    case 'g': copyLetter(g,             7); break;
+    case 'h': copyLetter(h,             7); break;
+    case 'i': copyLetter(i,             5); break;
+    case 'j': copyLetter(j,             6); break;
+    case 'k': copyLetter(k,             7); break;
+    case 'l': copyLetter(l,             6); break;
+    case 'm': copyLetter(m,             7); break;
+    case 'n': copyLetter(n,             6); break;
+    case 'o': copyLetter(o,             6); break;
+    case 'p': copyLetter(p,             7); break;
+    case 'q': copyLetter(q,             7); break;
+    case 'r': copyLetter(r,             7); break;
+    case 's': copyLetter(s,             6); break;
+    case 't': copyLetter(t,             6); break;
+    case 'u': copyLetter(u,             7); break;
+    case 'v': copyLetter(v,             6); break;
+    case 'w': copyLetter(w,             7); break;
+    case 'x': copyLetter(x,             7); break;
+    case 'y': copyLetter(y,             6); break;
+    case 'z': copyLetter(z,             6); break;
+    
     case ' ': copyLetter(SPACE,         3); break;
     case ':': copyLetter(COLON,         4); break;
     case ';': copyLetter(SEMI_COLON,    5); break;
@@ -268,6 +326,10 @@ void mapLetter(){
     case '_': copyLetter(UNDERSCORE,    5); break;
     case '{': copyLetter(SQUIG_OPEN,    6); break;
     case '}': copyLetter(SQUIG_CLOSE,   6); break;
+    case '^': copyLetter(AMPERSAND,     6); break;
+    case '/': copyLetter(FWD_SLASH,     6); break;
+    case '\\': copyLetter(BACK_SLASH,   7); break;
+    case '~': copyLetter(TILDA,         7); break;
     
     default: copyLetter(SPACE, 3); break;
   }

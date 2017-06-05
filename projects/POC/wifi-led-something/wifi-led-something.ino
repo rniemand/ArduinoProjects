@@ -15,6 +15,8 @@
 #define WLAN_SSID         "PickMe"
 #define WLAN_PASS         "fallout312345"
 const char* mqtt_server   = "broker.mqtt-dashboard.com";
+String CLIENT_NAME        = "RnEsp123";
+// rnInTopic  |  rnOutTopic
 
 /************************* WiFi & Config *********************************/
 
@@ -27,9 +29,12 @@ char msg[50];
 int value = 0;
 String line1 = "";
 String line2 = "";
+bool newMessage = false;
 
 
 void setup(void) {
+  Serial.begin(9600);
+  
   u8g2.begin();
   waitForWiFiConnection();
   connectMqtt();
@@ -41,14 +46,18 @@ void loop(void) {
   }
   client.loop();
 
-  long now = millis();
-  if (now - lastMsg > 2000) {
-    lastMsg = now;
-    ++value;
-    snprintf (msg, 75, "hello world #%ld", value);
-    Serial.print("Publish message: ");
-    print("Publishing", msg);
-    client.publish("rnOutTopic", msg);
+  if(newMessage == true) {
+    updateScreen();
+    newMessage = false;
+  } else {
+    long now = millis();
+    if (now - lastMsg > 2000) {
+      lastMsg = now;
+      ++value;
+      snprintf (msg, 75, "hello world #%ld", value);
+      print("Publishing", msg);
+      client.publish("rnOutTopic", msg);
+    }
   }
   
   //updateScreen();
@@ -66,14 +75,22 @@ void callback(char* topic, byte* payload, unsigned int length) {
   //line1 = String("Message [" + topic + "]");
   line1 = topic;
   char tmp[length];
+
+  Serial.println(topic);
+  Serial.println(length);
   
   for (int i = 0; i < length; i++) {
-    //Serial.print((char)payload[i]);
-    tmp[i] = (char)payload[i];
+    if(i < length) {
+      Serial.print((char)payload[i]);
+      tmp[i] = (char)payload[i];
+      newMessage = true;
+    }
   }
 
+  Serial.println();
+  Serial.println(tmp);
   line2 = String(tmp);
-  //Serial.println();
+  
   updateScreen();
 
   // Switch on the LED if an 1 was received as first character
@@ -92,15 +109,15 @@ void reconnect() {
   while (!client.connected()) {
     print("Attempting MQTT connection...", "");
     // Create a random client ID
-    String clientId = "ESP8266Client-";
-    clientId += String(random(0xffff), HEX);
+    //String clientId = "ESP8266Client-";
+    //clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (client.connect(clientId.c_str())) {
+    if (client.connect(CLIENT_NAME.c_str())) {
       print("MQTT connected", "");
       // Once connected, publish an announcement...
       client.publish("outTopic", "hello world");
       // ... and resubscribe
-      client.subscribe("inTopic");
+      client.subscribe("rnInTopic");
     } else {
       print("failed, rc=" + client.state(), "Waiting 5 secs.");
       // Wait 5 seconds before retrying

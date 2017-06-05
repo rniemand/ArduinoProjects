@@ -1,7 +1,9 @@
+#include <Servo.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Arduino.h>
 #include <U8g2lib.h>
+#include "FastLED.h"
 
 #ifdef U8X8_HAVE_HW_SPI
 #include <SPI.h>
@@ -16,6 +18,8 @@
 #define WLAN_PASS         "fallout312345"
 const char* mqtt_server   = "broker.mqtt-dashboard.com";
 String CLIENT_NAME        = "RnEsp123";
+#define NUM_LEDS          1
+#define DATA_PIN          D2
 // rnInTopic  |  rnOutTopic
 
 /************************* WiFi & Config *********************************/
@@ -23,6 +27,8 @@ String CLIENT_NAME        = "RnEsp123";
 U8G2_SSD1306_128X32_UNIVISION_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ D5, /* data=*/ D6, /* reset=*/ U8X8_PIN_NONE);
 WiFiClient espClient;
 PubSubClient client(espClient);
+CRGB leds[NUM_LEDS];
+Servo myservo;
 
 long lastMsg = 0;
 char msg[50];
@@ -34,10 +40,23 @@ bool newMessage = false;
 
 void setup(void) {
   Serial.begin(9600);
+  Serial.println("Booting up");
+  myservo.attach(D1);
+
+  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
+  setLedColor(255, 0, 0);
   
   u8g2.begin();
   waitForWiFiConnection();
   connectMqtt();
+  Serial.println("booted");
+
+  int pos;
+  for(pos = 0; pos <= 140; pos += 1) // goes from 0 degrees to 180 degrees 
+  {                                  // in steps of 1 degree 
+    myservo.write(pos);              // tell servo to go to position in variable 'pos' 
+    delay(15);                       // waits 15ms for the servo to reach the position 
+  }
 }
 
 void loop(void) {
@@ -49,19 +68,20 @@ void loop(void) {
   if(newMessage == true) {
     updateScreen();
     newMessage = false;
+    delay(500);
   } else {
     long now = millis();
-    if (now - lastMsg > 2000) {
+    if (now - lastMsg > 5000) {
       lastMsg = now;
       ++value;
-      snprintf (msg, 75, "hello world #%ld", value);
+      snprintf (msg, 75, "checkin #%ld", value);
       print("Publishing", msg);
       client.publish("rnOutTopic", msg);
     }
   }
   
   //updateScreen();
-  delay(1000);  
+  delay(250);  
 }
 
 void connectMqtt() {
@@ -92,6 +112,43 @@ void callback(char* topic, byte* payload, unsigned int length) {
   line2 = String(tmp);
   
   updateScreen();
+
+  if(line2.indexOf("RED") != -1){
+    setLedColor(255, 0, 0);
+  }
+  if(line2.indexOf("GREEN") != -1){
+    setLedColor(0, 255, 0);
+  }
+  if(line2.indexOf("BLUE") != -1){
+    setLedColor(0, 0, 255);
+  }
+  if(line2.indexOf("RGB,") == 0){
+    Serial.println("------------------------");
+    int posComma = line2.indexOf(',', 4);
+    Serial.println(posComma);
+    Serial.println(line2.indexOf(',', posComma));
+    String _red = line2.substring(4, line2.indexOf(',', posComma));
+    Serial.println(_red.toInt());
+    posComma = line2.indexOf(',', posComma) + 1;
+
+    Serial.println(posComma);
+    Serial.println(line2.indexOf(',', posComma));
+    String _green = line2.substring(posComma, line2.indexOf(',', posComma));
+    Serial.println(_green.toInt());
+    posComma = line2.indexOf(',', posComma) + 1;
+
+    Serial.println(posComma);
+    Serial.println(line2.indexOf(',', posComma));
+    String _blue = line2.substring(posComma, line2.indexOf(',', posComma));
+    Serial.println(_blue.toInt());
+
+    setLedColor(_red.toInt(), _green.toInt(), _blue.toInt());
+  }
+  if(line2.indexOf("SERVO,") == 0){
+    String _pos = line2.substring(6, line2.length());
+    Serial.println(_pos.toInt());
+    myservo.write(_pos.toInt()Hi );
+  }
 
   // Switch on the LED if an 1 was received as first character
   if ((char)payload[0] == '1') {
@@ -195,6 +252,10 @@ char* getIpAddress() {
   return char_array;
 }
 
+void setLedColor(byte red, byte green, byte blue) {
+  leds[0] = CRGB(red, green, blue);
+  FastLED.show();
+}
 
 
 

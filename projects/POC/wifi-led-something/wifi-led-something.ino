@@ -12,12 +12,15 @@
 #include <Wire.h>
 #endif
 
+// https://github.com/knolleary/pubsubclient
+
 /************************* WiFi & Config *********************************/
 
 #define WLAN_SSID         "PickMe"
 #define WLAN_PASS         "fallout312345"
-const char* mqtt_server   = "broker.mqtt-dashboard.com";
-String CLIENT_NAME        = "RnEsp123";
+//const char* mqtt_server   = "broker.mqtt-dashboard.com";
+const char* mqtt_server   = "mqtt.rniemand.com";
+String CLIENT_NAME        = "esp8266";
 #define NUM_LEDS          1
 #define DATA_PIN          D2
 // rnInTopic  |  rnOutTopic
@@ -94,18 +97,17 @@ void connectMqtt() {
 void callback(char* topic, byte* payload, unsigned int length) {
   //line1 = String("Message [" + topic + "]");
   line1 = topic;
-  char tmp[length];
+  char tmp[length + 1];
 
   Serial.println(topic);
   Serial.println(length);
   
   for (int i = 0; i < length; i++) {
-    if(i < length) {
-      Serial.print((char)payload[i]);
-      tmp[i] = (char)payload[i];
-      newMessage = true;
-    }
+    Serial.print((char)payload[i]);
+    tmp[i] = (char)payload[i];
+    newMessage = true;
   }
+  tmp[length] = '\0';
 
   Serial.println();
   Serial.println(tmp);
@@ -147,7 +149,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   if(line2.indexOf("SERVO,") == 0){
     String _pos = line2.substring(6, line2.length());
     Serial.println(_pos.toInt());
-    myservo.write(_pos.toInt()Hi );
+    myservo.write(_pos.toInt());
   }
 
   // Switch on the LED if an 1 was received as first character
@@ -169,7 +171,7 @@ void reconnect() {
     //String clientId = "ESP8266Client-";
     //clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (client.connect(CLIENT_NAME.c_str())) {
+    if (client.connect(CLIENT_NAME.c_str(), "esp8266", "bob")) {
       print("MQTT connected", "");
       // Once connected, publish an announcement...
       client.publish("outTopic", "hello world");

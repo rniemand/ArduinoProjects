@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 #include "FastLED.h"
+#include <DHT.h>
 
 #ifdef U8X8_HAVE_HW_SPI
 #include <SPI.h>
@@ -23,6 +24,12 @@ const char* mqtt_server   = "mqtt.rniemand.com";
 String CLIENT_NAME        = "esp8266";
 #define NUM_LEDS          1
 #define DATA_PIN          D2
+#define DHTPIN            D3
+#define DHTTYPE           DHT11
+bool dhtReadSuccess       = false;
+float humidity            = 0;
+float temperature         = 0;
+float heatIndex           = 0;
 // rnInTopic  |  rnOutTopic
 
 /************************* WiFi & Config *********************************/
@@ -32,10 +39,11 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 CRGB leds[NUM_LEDS];
 Servo myservo;
+DHT                     dht(DHTPIN, DHTTYPE);
 
 long lastMsg = 0;
+long lastDhtPublish = 0;
 char msg[50];
-int value = 0;
 String line1 = "";
 String line2 = "";
 bool newMessage = false;
@@ -52,14 +60,11 @@ void setup(void) {
   u8g2.begin();
   waitForWiFiConnection();
   connectMqtt();
-  Serial.println("booted");
 
-  int pos;
-  for(pos = 0; pos <= 140; pos += 1) // goes from 0 degrees to 180 degrees 
-  {                                  // in steps of 1 degree 
-    myservo.write(pos);              // tell servo to go to position in variable 'pos' 
-    delay(15);                       // waits 15ms for the servo to reach the position 
-  }
+  waitForDhtReady();
+  //myservo.write(45);
+
+  Serial.println("booted");
 }
 
 void loop(void) {
@@ -67,31 +72,60 @@ void loop(void) {
     reconnect();
   }
   client.loop();
+  long now = millis();
 
   if(newMessage == true) {
     updateScreen();
     newMessage = false;
     delay(500);
   } else {
-    long now = millis();
     if (now - lastMsg > 5000) {
       lastMsg = now;
-      ++value;
-      snprintf (msg, 75, "checkin #%ld", value);
-      print("Publishing", msg);
-      client.publish("rnOutTopic", msg);
+
+      int length = CLIENT_NAME.length() + 1;
+      char tmp[length];
+      CLIENT_NAME.toCharArray(tmp, length);
+      client.publish("devices/heartbeat", tmp);
     }
+  }
+
+  if (now - lastDhtPublish > 10000) {
+    readDhtValues();
+
+    char _temp[10] = {0};
+    dtostrf (temperature, 6 , 2, _temp);
+    client.publish("home/lounge/temperature", _temp);
+    Serial.print("temperature: ");
+    Serial.println(_temp);
+
+    char _humid[10] = {0};
+    dtostrf (humidity, 6 , 2, _humid);
+    client.publish("home/lounge/humidity", _humid);
+    Serial.print("humidity: ");
+    Serial.println(_humid);
+
+    char _heat[10] = {0};
+    dtostrf (heatIndex, 6 , 2, _heat);
+    client.publish("home/lounge/heatIndex", _heat);
+    Serial.print("heatIndex: ");
+    Serial.println(_heat);
+
+    Serial.println("publishing temperature data");
+    lastDhtPublish = now;
   }
   
   //updateScreen();
-  delay(250);  
+  //delay(250);  
 }
 
 void connectMqtt() {
+  Serial.print("Connecting to MQTT :");
+  Serial.println(mqtt_server);
   print("Connecting MQTT", mqtt_server);
   
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
+  Serial.println("Connected to MQTT");
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -215,15 +249,19 @@ void waitForWiFiConnection() {
   u8g2.sendBuffer();
   char dots[20] = "";
   int pos = 0;
-  
+
+  Serial.println("Connecting to WiFi");
   WiFi.begin(WLAN_SSID, WLAN_PASS);
   while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
     dots[pos] = '.';
     u8g2.drawStr(0,24, dots);
     u8g2.sendBuffer();
     delay(500);
     pos++;
   }
+  Serial.println();
+  Serial.println("Connected");
 
   u8g2.drawStr(0,32,"Connected!");
   u8g2.sendBuffer();
@@ -257,6 +295,44 @@ char* getIpAddress() {
 void setLedColor(byte red, byte green, byte blue) {
   leds[0] = CRGB(red, green, blue);
   FastLED.show();
+}
+
+void waitForDhtReady() {
+  Serial.print("Waiting for DHT ");
+  
+  while(!dhtReadSuccess) {
+    delay(250);
+    Serial.print(".");
+    readDhtValues();
+  }
+  
+  Serial.print(" READY (temperature: ");
+  Serial.print(temperature);
+  Serial.print(" *C) (humidity: ");
+  Serial.print(humidity);
+  Serial.print(" %) (heatIndex: ");
+  Serial.print(heatIndex);
+  Serial.print(")");
+  Serial.println();
+}
+
+void readDhtValues() {
+  dhtReadSuccess = false;
+
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+
+  // Check if any reads failed and exit early (to try again).
+  if (isnan(h) || isnan(t)) {
+    return;
+  }
+
+  temperature = t;
+  humidity = h;
+
+  dhtReadSuccess = true;
+  heatIndex = dht.computeHeatIndex(temperature, humidity, false);
+  Serial.println("Updated DHT values");
 }
 
 

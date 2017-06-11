@@ -9,10 +9,10 @@
 */
 
 #define POWER             D1
-#define PLAY_PAUSE        D7
-#define REPEAT_BTN        D6
-#define PREVIOUS          D5
-#define NEXT              D0
+#define PLAY_PAUSE        D6
+#define REPEAT_BTN        D7
+#define PREVIOUS          D0
+#define NEXT              D5
 #define WLAN_SSID         "PickMe"
 #define WLAN_PASS         "fallout312345"
 

@@ -12,19 +12,48 @@ const char* ssid        = "PickMe";
 const char* password    = "fallout312345";
 const char* host        = "esp8266sd";
 const int NUM_DISPLAYS  = 4;
-LedControl lc           = LedControl(D0, D1, D2, NUM_DISPLAYS);
-int NUM_ROWS            = 32;       // NUM_DISPLAYS * 8
-int                     rows[32];   // Same as NUM_ROWS
-int                     currentChar[8];
-int currentCharIdx      = 0;
-int currentCharLen      = 0;
-String message          = "Ready...";
-int messageIdx          = -1;
-int messageLen          = 0;
-bool messageChanged     = false;
-String serailText;
 
-ESP8266WebServer server(80);
+/* 
+ * Create a new controler 
+ * Params :
+ * dataPin    pin on the Arduino where data gets shifted out
+ * clockPin   pin for the clock
+ * csPin    pin for selecting the device 
+ * numDevices maximum number of devices that can be controled
+ */
+LedControl lc           = LedControl(D0, D1, D2, NUM_DISPLAYS);
+
+void setup() {
+  Serial.begin(9600);
+
+  for(int address = 0; address < NUM_DISPLAYS; address++) {
+    lc.shutdown(address,false);
+    lc.setIntensity(address, 2);
+    lc.clearDisplay(address);
+  }
+}
+
+int ii = 0;
+
+void loop() {
+  Serial.println("loop");
+
+  if(ii == 8) ii = 0;
+  
+  lc.setRow(0, ii, 255);
+  
+  delay(500);
+  ii++;
+}
+
+
+
+
+
+
+
+
+
 
 int _0[]          = { B00111110, B01111111, B01110001, B01011001, B01001101, B01111111, B00111110 };
 int _1[]          = { B01000000, B01000010, B01111111, B01111111, B01000000, B01000000 };
@@ -116,6 +145,21 @@ int AMPERSAND[]   = { B00001000, B00001100, B00000110, B00000011, B00000110, B00
 int FWD_SLASH[]   = { B01100000, B00110000, B00011000, B00001100, B00000110, B00000011, B00000001 };
 int BACK_SLASH[]  = { B00000001, B00000011, B00000110, B00001100, B00011000, B00110000, B01100000 };
 int TILDA[]       = { B00000010, B00000011, B00000001, B00000011, B00000010, B00000011, B00000001 };
+
+/*
+int NUM_ROWS            = 32;       // NUM_DISPLAYS * 8
+int                     rows[32];   // Same as NUM_ROWS
+int                     currentChar[8];
+int currentCharIdx      = 0;
+int currentCharLen      = 0;
+String message          = "Ready...";
+int messageIdx          = -1;
+int messageLen          = 0;
+bool messageChanged     = false;
+String serailText;
+
+ESP8266WebServer server(80);
+
 
 
 void returnOK() {
@@ -386,6 +430,6 @@ void render() {
     lc.setRow(displayNumber, columnNumber, rowValue);
   }
 }
-
+*/
 
 
